@@ -1,8 +1,125 @@
 generator client {
   provider = "prisma-client-js"
-  binaryTargets = ["native", "rhel-openssl-3.0.x"] // native for mac, rhel-openssl-3.0.x for AWS lambda
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// --------------------------------------
+// Enums (Strict Typing)
+// --------------------------------------
+
+enum DanceStyle {
+  SALSA
+  BACHATA
+  REGGAETON
+}
+
+enum DanceLevel {
+  OPEN // No specific level
+  LEVEL_1 // Beginner
+  LEVEL_2 // Intermediate
+  LEVEL_3 // Advanced
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+}
+
+// --------------------------------------
+// Models
+// --------------------------------------
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  role      UserRole @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings      Booking[]
+  classesTaught ClassDefinition[]
+}
+
+model ClassDefinition {
+  id          String     @id @default(uuid())
+  title       String
+  description String?    @db.Text
+  style       DanceStyle
+  level       DanceLevel @default(OPEN)
+  maxSpots    Int        @default(20)
+  durationMin Int        @default(60)
+
+  instructorId String?
+  instructor   User?           @relation(fields: [instructorId], references: [id])
+  instances    ClassInstance[]
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  weeklySchedules WeeklySchedule[]
+
+  @@index([style])
+}
+
+model WeeklySchedule {
+  id String @id @default(uuid())
+
+  definitionId String
+  definition   ClassDefinition @relation(fields: [definitionId], references: [id])
+
+  dayOfWeek       DayOfWeek
+  startTime       String
+  durationMinutes Int       @default(60)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dayOfWeek])
+}
+
+model ClassInstance {
+  id           String   @id @default(uuid())
+  definitionId String
+  startTime    DateTime
+  endTime      DateTime
+  bookedCount  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bookings   Booking[]
+  definition ClassDefinition @relation(fields: [definitionId], references: [id])
+
+  @@index([startTime, endTime])
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  classInstanceId String
+  classInstance   ClassInstance @relation(fields: [classInstanceId], references: [id])
+  status          BookingStatus @default(CONFIRMED)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([userId, classInstanceId])
+  @@index([userId])
 }

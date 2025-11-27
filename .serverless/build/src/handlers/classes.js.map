@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../src/handlers/classes.ts"],
+  "sourcesContent": ["import type { APIGatewayProxyEvent, APIGatewayProxyResult } from \"aws-lambda\";\n\nexport const search = async (\n  event: APIGatewayProxyEvent\n): Promise<APIGatewayProxyResult> => {\n  return {\n    statusCode: 200,\n    headers: {\n      \"Content-Type\": \"application/json\",\n    },\n    body: JSON.stringify({}),\n  };\n};\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAEO,IAAM,SAAS,OACpB,UACmC;AACnC,SAAO;AAAA,IACL,YAAY;AAAA,IACZ,SAAS;AAAA,MACP,gBAAgB;AAAA,IAClB;AAAA,IACA,MAAM,KAAK,UAAU,CAAC,CAAC;AAAA,EACzB;AACF;",
+  "names": []
+}
