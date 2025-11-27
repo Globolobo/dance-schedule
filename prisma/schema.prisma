@@ -1,0 +1,8 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"] // native for mac, rhel-openssl-3.0.x for AWS lambda
+}
+
+datasource db {
+  provider = "postgresql"
+}

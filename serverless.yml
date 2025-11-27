@@ -1,0 +1,39 @@
+service: invenco
+frameworkVersion: "4"
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: ap-southeast-2
+  environment:
+    DATABASE_URL: ${env:DATABASE_URL}
+
+build:
+  esbuild:
+    bundle: true
+    minify: false
+    # Exclude prisma from the bundle so it prevents errors with the binary engines
+    external:
+      - "@prisma/client"
+      - ".prisma"
+
+# Explicitly include the Prisma engines in the zip package
+package:
+  patterns:
+    - "!./**"
+    - "src/**"
+    - "node_modules/.prisma/client/**"
+    - "node_modules/@prisma/client/**"
+    - "prisma/schema.prisma"
+
+functions:
+  searchClasses:
+    handler: src/handlers/classes.search
+    events:
+      - httpApi:
+          path: /classes/search
+          method: get
+
+plugins:
+  - serverless-offline

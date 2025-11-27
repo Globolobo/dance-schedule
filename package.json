@@ -1,0 +1,26 @@
+{
+  "name": "invenco",
+  "version": "1.0.0",
+  "description": "scheduler for dance studio",
+  "main": "index.js",
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/adapter-pg": "7.0.1",
+    "@prisma/client": "7.0.1",
+    "pg": "8.16.3"
+  },
+  "devDependencies": {
+    "@types/pg": "8.15.6",
+    "dotenv": "17.2.3",
+    "prisma": "7.0.1",
+    "serverless-offline": "14.4.0",
+    "ts-node": "10.9.2"
+  }
+}
