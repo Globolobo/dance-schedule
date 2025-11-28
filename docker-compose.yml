@@ -19,9 +19,34 @@ services:
       retries: 5
       start_period: 10s
 
+  postgres-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_TEST_DB:-invenco_test}
+    ports:
+      - "${POSTGRES_TEST_PORT:-5433}:5432"
+    volumes:
+      - pgtestdata:/var/lib/postgresql/data
+    networks:
+      - invenco-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_TEST_DB:-invenco_test}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 networks:
   invenco-network:
     driver: bridge
 
 volumes:
   pgdata:
+  pgtestdata:
