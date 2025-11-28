@@ -2,9 +2,9 @@ import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { DanceStyle, DanceLevel } from "@prisma/client";
 import { ApplicationService } from "../../../src/classes/application/service";
 import type { ClassInstanceWithDefinition } from "../../../src/classes/dto/repository.dto";
-import type { IClassInstanceRepository } from "../../../src/classes/repositories/interfaces/class-instance.repository.interface";
-import type { IUserRepository } from "../../../src/classes/repositories/interfaces/user.repository.interface";
-import type { IBookingRepository } from "../../../src/classes/repositories/interfaces/booking.repository.interface";
+import type { IClassInstanceRepository } from "../../../src/classes/interfaces/class-instance.repository.interface";
+import type { IUserRepository } from "../../../src/classes/interfaces/user.repository.interface";
+import type { IBookingRepository } from "../../../src/classes/interfaces/booking.repository.interface";
 
 describe("ApplicationService", () => {
   let applicationService: ApplicationService;

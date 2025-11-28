@@ -1,5 +1,5 @@
 import type { User } from "@prisma/client";
-import { prisma } from "../../../client";
+import { prisma } from "../../client";
 import type { IUserRepository } from "../interfaces/user.repository.interface";
 
 export class PrismaUserRepository implements IUserRepository {

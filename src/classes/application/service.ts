@@ -2,9 +2,9 @@ import type { DanceStyleFilter } from "../dto/shared";
 import type { SearchResponse } from "../dto/search.dto";
 import { DANCE_STYLE_MAP } from "../dto/search.dto";
 import type { BookingWithRelations } from "../dto/booking.dto";
-import type { IClassInstanceRepository } from "../repositories/interfaces/class-instance.repository.interface";
-import type { IUserRepository } from "../repositories/interfaces/user.repository.interface";
-import type { IBookingRepository } from "../repositories/interfaces/booking.repository.interface";
+import type { IClassInstanceRepository } from "../interfaces/class-instance.repository.interface";
+import type { IUserRepository } from "../interfaces/user.repository.interface";
+import type { IBookingRepository } from "../interfaces/booking.repository.interface";
 import {
   ClassInstanceNotFoundError,
   UserNotFoundError,
@@ -40,13 +40,11 @@ export class ApplicationService {
   }
 
   async bookClass(params: BookClassParams): Promise<BookingWithRelations> {
-    // Fetch class instance and user in parallel
     const [classInstance, user] = await Promise.all([
       this.classInstanceRepository.findById(params.classInstanceId),
       this.userRepository.findByEmail(params.email),
     ]);
 
-    // Validate entities exist
     if (!classInstance) {
       throw new ClassInstanceNotFoundError(params.classInstanceId);
     }
@@ -60,7 +58,6 @@ export class ApplicationService {
       throw new ClassFullError(classInstance.id);
     }
 
-    // Check for existing booking
     const existingBooking = await this.bookingRepository.findByUserAndClass(
       user.id,
       classInstance.id

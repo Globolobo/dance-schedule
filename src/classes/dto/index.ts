@@ -2,5 +2,4 @@
 export * from "./shared";
 export * from "./search.dto";
 export * from "./booking.dto";
-export * from "./repository.types";
-
+export * from "./repository.dto";

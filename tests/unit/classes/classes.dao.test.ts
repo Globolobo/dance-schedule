@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { DanceStyle, DanceLevel } from "@prisma/client";
-import { PrismaClassInstanceRepository } from "../../../src/classes/repositories/implementations/prisma-class-instance.repository";
+import { PrismaClassInstanceRepository } from "../../../src/classes/repositories/prisma-class-instance.repository";
 import type { ClassInstanceWithDefinition } from "../../../src/classes/dto/repository.dto";
 
 jest.mock("../../../src/client", () => ({

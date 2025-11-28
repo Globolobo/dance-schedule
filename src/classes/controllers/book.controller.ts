@@ -8,12 +8,11 @@ import {
 } from "../dto/booking.dto";
 import { formatValidationErrors } from "../../utils/validation";
 import { ApplicationService } from "../application/service";
-import { PrismaClassInstanceRepository } from "../repositories/implementations/prisma-class-instance.repository";
-import { PrismaUserRepository } from "../repositories/implementations/prisma-user.repository";
-import { PrismaBookingRepository } from "../repositories/implementations/prisma-booking.repository";
+import { PrismaClassInstanceRepository } from "../repositories/prisma-class-instance.repository";
+import { PrismaUserRepository } from "../repositories/prisma-user.repository";
+import { PrismaBookingRepository } from "../repositories/prisma-booking.repository";
 import { NotFoundError, ConflictError } from "../domain/errors";
 
-// Initialize application service with dependencies
 const applicationService = new ApplicationService(
   new PrismaClassInstanceRepository(),
   new PrismaUserRepository(),
@@ -23,7 +22,6 @@ const applicationService = new ApplicationService(
 const bookHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  // Validate headers
   const headersValidation = BookClassHeadersSchema.safeParse(event.headers);
 
   if (!headersValidation.success) {
@@ -33,7 +31,6 @@ const bookHandler = async (
 
   const { "idempotency-key": idempotencyKey } = headersValidation.data;
 
-  // Validate and parse request body
   const bodyValidation = BookClassRequestBodySchema.safeParse(event.body || "");
 
   if (!bodyValidation.success) {
@@ -58,7 +55,6 @@ const bookHandler = async (
       body: JSON.stringify(booking),
     };
   } catch (error) {
-    // Map domain errors to HTTP errors using instanceof checks
     if (error instanceof NotFoundError) {
       throw createError(error.statusCode, error.message);
     }

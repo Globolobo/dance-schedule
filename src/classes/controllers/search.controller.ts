@@ -5,11 +5,10 @@ import createError from "http-errors";
 import { SearchQueryParamsSchema } from "../dto/search.dto";
 import { formatValidationErrors } from "../../utils/validation";
 import { ApplicationService } from "../application/service";
-import { PrismaClassInstanceRepository } from "../repositories/implementations/prisma-class-instance.repository";
-import { PrismaUserRepository } from "../repositories/implementations/prisma-user.repository";
-import { PrismaBookingRepository } from "../repositories/implementations/prisma-booking.repository";
+import { PrismaClassInstanceRepository } from "../repositories/prisma-class-instance.repository";
+import { PrismaUserRepository } from "../repositories/prisma-user.repository";
+import { PrismaBookingRepository } from "../repositories/prisma-booking.repository";
 
-// Initialize application service with dependencies
 const applicationService = new ApplicationService(
   new PrismaClassInstanceRepository(),
   new PrismaUserRepository(),

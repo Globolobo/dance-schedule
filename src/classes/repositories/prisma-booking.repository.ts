@@ -1,11 +1,11 @@
 import { BookingStatus } from "@prisma/client";
-import { prisma } from "../../../client";
+import { prisma } from "../../client";
 import type {
   IBookingRepository,
   CreateBookingParams,
 } from "../interfaces/booking.repository.interface";
-import type { BookingWithRelations } from "../../dto/booking.dto";
-import { classInstanceIncludeDefinition } from "../../dto/repository.dto";
+import type { BookingWithRelations } from "../dto/booking.dto";
+import { classInstanceIncludeDefinition } from "../dto/repository.dto";
 
 export class PrismaBookingRepository implements IBookingRepository {
   async findByUserAndClass(userId: string, classInstanceId: string) {
@@ -23,7 +23,6 @@ export class PrismaBookingRepository implements IBookingRepository {
     params: CreateBookingParams
   ): Promise<BookingWithRelations> {
     return await prisma.$transaction(async (tx) => {
-      // Check if booking with this idempotency key OR email already exists
       const existingBooking = await tx.booking.findFirst({
         where: {
           OR: [
@@ -54,7 +53,6 @@ export class PrismaBookingRepository implements IBookingRepository {
         return existingBooking as BookingWithRelations;
       }
 
-      // Create booking and increment count atomically
       const booking = await tx.booking.create({
         data: {
           userId: params.userId,
@@ -76,7 +74,6 @@ export class PrismaBookingRepository implements IBookingRepository {
         },
       });
 
-      // Increment bookedCount
       await tx.classInstance.update({
         where: { id: params.classInstanceId },
         data: {
@@ -86,7 +83,6 @@ export class PrismaBookingRepository implements IBookingRepository {
         },
       });
 
-      // Re-fetch the booking with updated classInstance
       const updatedBooking = await tx.booking.findUnique({
         where: { id: booking.id },
         include: {

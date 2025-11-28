@@ -1,8 +1,8 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "../../../client";
+import { prisma } from "../../client";
 import type { IClassInstanceRepository } from "../interfaces/class-instance.repository.interface";
-import type { ClassInstanceWithDefinition } from "../../dto/repository.dto";
-import { classInstanceIncludeDefinition } from "../../dto/repository.dto";
+import type { ClassInstanceWithDefinition } from "../dto/repository.dto";
+import { classInstanceIncludeDefinition } from "../dto/repository.dto";
 
 export class PrismaClassInstanceRepository implements IClassInstanceRepository {
   async findById(id: string): Promise<ClassInstanceWithDefinition | null> {
