@@ -29,7 +29,7 @@ package:
 
 functions:
   searchClasses:
-    handler: src/handlers/classes.search
+    handler: src/modules/classes/index.search
     events:
       - httpApi:
           path: /classes/search
