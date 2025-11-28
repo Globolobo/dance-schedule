@@ -19,6 +19,7 @@ CREATE TABLE "User" (
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "role" "UserRole" NOT NULL DEFAULT 'STUDENT',
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -61,6 +62,7 @@ CREATE TABLE "ClassInstance" (
     "startTime" TIMESTAMP(3) NOT NULL,
     "endTime" TIMESTAMP(3) NOT NULL,
     "bookedCount" INTEGER NOT NULL DEFAULT 0,
+    "instructorId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -73,6 +75,7 @@ CREATE TABLE "Booking" (
     "userId" TEXT NOT NULL,
     "classInstanceId" TEXT NOT NULL,
     "status" "BookingStatus" NOT NULL DEFAULT 'CONFIRMED',
+    "idempotencyKey" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -92,6 +95,9 @@ CREATE INDEX "WeeklySchedule_dayOfWeek_idx" ON "WeeklySchedule"("dayOfWeek");
 CREATE INDEX "ClassInstance_startTime_endTime_idx" ON "ClassInstance"("startTime", "endTime");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Booking_idempotencyKey_key" ON "Booking"("idempotencyKey");
+
+-- CreateIndex
 CREATE INDEX "Booking_userId_idx" ON "Booking"("userId");
 
 -- CreateIndex
@@ -104,10 +110,13 @@ ALTER TABLE "ClassDefinition" ADD CONSTRAINT "ClassDefinition_instructorId_fkey"
 ALTER TABLE "WeeklySchedule" ADD CONSTRAINT "WeeklySchedule_definitionId_fkey" FOREIGN KEY ("definitionId") REFERENCES "ClassDefinition"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "ClassInstance" ADD CONSTRAINT "ClassInstance_instructorId_fkey" FOREIGN KEY ("instructorId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ClassInstance" ADD CONSTRAINT "ClassInstance_definitionId_fkey" FOREIGN KEY ("definitionId") REFERENCES "ClassDefinition"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Booking" ADD CONSTRAINT "Booking_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Booking" ADD CONSTRAINT "Booking_classInstanceId_fkey" FOREIGN KEY ("classInstanceId") REFERENCES "ClassInstance"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
