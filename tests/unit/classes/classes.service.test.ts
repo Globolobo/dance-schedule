@@ -1,18 +1,36 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { DanceStyle, DanceLevel } from "@prisma/client";
-import { searchClasses } from "../../../src/modules/classes/classes.service";
-import type { ClassInstanceWithDefinition } from "../../../src/modules/classes/classes.dto";
+import { ApplicationService } from "../../../src/classes/application/service";
+import type { ClassInstanceWithDefinition } from "../../../src/classes/dto/repository.dto";
+import type { IClassInstanceRepository } from "../../../src/classes/repositories/interfaces/class-instance.repository.interface";
+import type { IUserRepository } from "../../../src/classes/repositories/interfaces/user.repository.interface";
+import type { IBookingRepository } from "../../../src/classes/repositories/interfaces/booking.repository.interface";
 
-jest.mock("../../../src/modules/classes/classes.dao", () => ({
-  findClasses: jest.fn(),
-}));
+describe("ApplicationService", () => {
+  let applicationService: ApplicationService;
+  let mockClassInstanceRepository: jest.Mocked<IClassInstanceRepository>;
+  let mockUserRepository: jest.Mocked<IUserRepository>;
+  let mockBookingRepository: jest.Mocked<IBookingRepository>;
 
-import { findClasses } from "../../../src/modules/classes/classes.dao";
-
-const mockFindClasses = findClasses as jest.MockedFunction<typeof findClasses>;
-
-describe("classes.service", () => {
   beforeEach(() => {
+    mockClassInstanceRepository = {
+      findById: jest.fn(),
+      findMany: jest.fn(),
+    };
+    mockUserRepository = {
+      findByEmail: jest.fn(),
+    };
+    mockBookingRepository = {
+      findByUserAndClass: jest.fn(),
+      createWithTransaction: jest.fn(),
+    };
+
+    applicationService = new ApplicationService(
+      mockClassInstanceRepository,
+      mockUserRepository,
+      mockBookingRepository
+    );
+
     jest.clearAllMocks();
   });
 
@@ -75,11 +93,13 @@ describe("classes.service", () => {
             style: expectedStyle,
           },
         };
-        mockFindClasses.mockResolvedValue([testInstance]);
+        mockClassInstanceRepository.findMany.mockResolvedValue([testInstance]);
 
-        const result = await searchClasses(filter as any);
+        const result = await applicationService.searchClasses(filter as any);
 
-        expect(mockFindClasses).toHaveBeenCalledWith(expectedWhere);
+        expect(mockClassInstanceRepository.findMany).toHaveBeenCalledWith(
+          expectedWhere
+        );
         expect(result).toEqual({
           classes: [testInstance],
           count: 1,
@@ -93,18 +113,18 @@ describe("classes.service", () => {
         { ...mockInstance, id: "instance-2" },
         { ...mockInstance, id: "instance-3" },
       ];
-      mockFindClasses.mockResolvedValue(multipleInstances);
+      mockClassInstanceRepository.findMany.mockResolvedValue(multipleInstances);
 
-      const result = await searchClasses("any");
+      const result = await applicationService.searchClasses("any");
 
       expect(result.count).toBe(3);
       expect(result.classes).toHaveLength(3);
     });
 
     it("should format response structure correctly", async () => {
-      mockFindClasses.mockResolvedValue([mockInstance]);
+      mockClassInstanceRepository.findMany.mockResolvedValue([mockInstance]);
 
-      const result = await searchClasses("salsa");
+      const result = await applicationService.searchClasses("salsa");
 
       expect(result).toHaveProperty("classes");
       expect(result).toHaveProperty("count");

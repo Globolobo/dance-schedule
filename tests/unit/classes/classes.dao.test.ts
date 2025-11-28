@@ -1,12 +1,13 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { DanceStyle, DanceLevel } from "@prisma/client";
-import { findClasses } from "../../../src/modules/classes/classes.dao";
-import type { ClassInstanceWithDefinition } from "../../../src/modules/classes/classes.dto";
+import { PrismaClassInstanceRepository } from "../../../src/classes/repositories/implementations/prisma-class-instance.repository";
+import type { ClassInstanceWithDefinition } from "../../../src/classes/dto/repository.dto";
 
 jest.mock("../../../src/client", () => ({
   prisma: {
     classInstance: {
       findMany: jest.fn(),
+      findUnique: jest.fn(),
     },
   },
 }));
@@ -96,33 +97,22 @@ function createMockInstance(
   } as ClassInstanceWithDefinition;
 }
 
-function createMockInstances(
-  count: number,
-  params: CreateMockInstanceParams = {}
-): ClassInstanceWithDefinition[] {
-  return Array.from({ length: count }, (_, index) =>
-    createMockInstance({
-      ...params,
-      instanceId: params.instanceId || `instance-${index + 1}`,
-      definitionId: params.definitionId || `class-${index + 1}`,
-    })
-  );
-}
-
-describe("classes.dao", () => {
+describe("PrismaClassInstanceRepository", () => {
   const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+  let repository: PrismaClassInstanceRepository;
 
   beforeEach(() => {
+    repository = new PrismaClassInstanceRepository();
     jest.clearAllMocks();
   });
 
-  describe("findClasses", () => {
+  describe("findMany", () => {
     it("should return class instances with definition and instructor relation", async () => {
       const mockInstances = [createMockInstance()];
 
       mockPrisma.classInstance.findMany.mockResolvedValue(mockInstances as any);
 
-      const result = await findClasses({});
+      const result = await repository.findMany({});
 
       expect(result).toEqual(mockInstances);
       expect(mockPrisma.classInstance.findMany).toHaveBeenCalledWith({
@@ -159,7 +149,7 @@ describe("classes.dao", () => {
       mockPrisma.classInstance.findMany.mockResolvedValue(mockInstances as any);
 
       const where = { definition: { style: DanceStyle.SALSA } };
-      const result = await findClasses(where);
+      const result = await repository.findMany(where);
 
       expect(result).toEqual(mockInstances);
       expect(mockPrisma.classInstance.findMany).toHaveBeenCalledWith({
@@ -188,7 +178,7 @@ describe("classes.dao", () => {
 
       mockPrisma.classInstance.findMany.mockResolvedValue(mockInstances as any);
 
-      await findClasses({});
+      await repository.findMany({});
 
       expect(mockPrisma.classInstance.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -204,7 +194,7 @@ describe("classes.dao", () => {
 
       mockPrisma.classInstance.findMany.mockResolvedValue(mockInstances as any);
 
-      const result = await findClasses({});
+      const result = await repository.findMany({});
 
       expect(result).toEqual([]);
       expect(mockPrisma.classInstance.findMany).toHaveBeenCalled();
@@ -222,28 +212,47 @@ describe("classes.dao", () => {
 
       mockPrisma.classInstance.findMany.mockResolvedValue(mockInstances as any);
 
-      const result = await findClasses({});
+      const result = await repository.findMany({});
 
       expect(result).toEqual(mockInstances);
       expect(result[0].definition.instructor).toBeNull();
     });
+  });
 
-    it("should handle null instructorId in definition", async () => {
-      const mockInstances = [
-        createMockInstance({
+  describe("findById", () => {
+    it("should return class instance when found", async () => {
+      const mockInstance = createMockInstance();
+      mockPrisma.classInstance.findUnique.mockResolvedValue(
+        mockInstance as any
+      );
+
+      const result = await repository.findById("instance-1");
+
+      expect(result).toEqual(mockInstance);
+      expect(mockPrisma.classInstance.findUnique).toHaveBeenCalledWith({
+        where: { id: "instance-1" },
+        include: {
           definition: {
-            description: null,
-            instructor: null,
+            include: {
+              instructor: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
           },
-        }),
-      ];
+        },
+      });
+    });
 
-      mockPrisma.classInstance.findMany.mockResolvedValue(mockInstances as any);
+    it("should return null when not found", async () => {
+      mockPrisma.classInstance.findUnique.mockResolvedValue(null);
 
-      const result = await findClasses({});
+      const result = await repository.findById("non-existent");
 
-      expect(result).toEqual(mockInstances);
-      expect(result[0].definition.instructor).toBeNull();
+      expect(result).toBeNull();
     });
   });
 });

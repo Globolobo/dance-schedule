@@ -29,11 +29,17 @@ package:
 
 functions:
   searchClasses:
-    handler: src/modules/classes/index.search
+    handler: src/classes/index.search
     events:
       - httpApi:
           path: /classes/search
           method: get
+  bookClass:
+    handler: src/classes/index.book
+    events:
+      - httpApi:
+          path: /classes/book
+          method: post
 
 plugins:
   - serverless-offline

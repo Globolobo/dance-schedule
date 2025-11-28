@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "@jest/globals";
 import { getTestPrisma } from "../../setup";
-import { search } from "../../../src/modules/classes/classes.controller";
+import { search } from "../../../src/classes/controllers/search.controller";
 import {
   createTestInstructor,
   createTestClassInstance,

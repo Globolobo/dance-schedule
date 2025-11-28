@@ -5740,6 +5740,7 @@ var require_postgres_array2 = __commonJS({
 // src/modules/classes/index.ts
 var index_exports = {};
 __export(index_exports, {
+  book: () => book,
   search: () => search
 });
 module.exports = __toCommonJS(index_exports);
@@ -6025,1060 +6026,8 @@ var httpErrorHandlerMiddleware = (opts = {}) => {
 };
 var http_error_handler_default = httpErrorHandlerMiddleware;
 
-// src/modules/classes/classes.controller.ts
+// src/modules/classes/controllers/classes.controller.ts
 var import_http_errors = __toESM(require_http_errors());
-
-// src/client.ts
-var import_client = require("@prisma/client");
-
-// node_modules/pg/esm/index.mjs
-var import_lib = __toESM(require_lib2(), 1);
-var Client = import_lib.default.Client;
-var Pool = import_lib.default.Pool;
-var Connection = import_lib.default.Connection;
-var types = import_lib.default.types;
-var Query = import_lib.default.Query;
-var DatabaseError = import_lib.default.DatabaseError;
-var escapeIdentifier = import_lib.default.escapeIdentifier;
-var escapeLiteral = import_lib.default.escapeLiteral;
-var Result = import_lib.default.Result;
-var TypeOverrides = import_lib.default.TypeOverrides;
-var defaults2 = import_lib.default.defaults;
-var esm_default = import_lib.default;
-
-// node_modules/@prisma/debug/dist/index.mjs
-var __defProp2 = Object.defineProperty;
-var __export2 = (target, all) => {
-  for (var name2 in all)
-    __defProp2(target, name2, { get: all[name2], enumerable: true });
-};
-var colors_exports = {};
-__export2(colors_exports, {
-  $: () => $,
-  bgBlack: () => bgBlack,
-  bgBlue: () => bgBlue,
-  bgCyan: () => bgCyan,
-  bgGreen: () => bgGreen,
-  bgMagenta: () => bgMagenta,
-  bgRed: () => bgRed,
-  bgWhite: () => bgWhite,
-  bgYellow: () => bgYellow,
-  black: () => black,
-  blue: () => blue,
-  bold: () => bold,
-  cyan: () => cyan,
-  dim: () => dim,
-  gray: () => gray,
-  green: () => green,
-  grey: () => grey,
-  hidden: () => hidden,
-  inverse: () => inverse,
-  italic: () => italic,
-  magenta: () => magenta,
-  red: () => red,
-  reset: () => reset,
-  strikethrough: () => strikethrough,
-  underline: () => underline,
-  white: () => white,
-  yellow: () => yellow
-});
-var FORCE_COLOR;
-var NODE_DISABLE_COLORS;
-var NO_COLOR;
-var TERM;
-var isTTY = true;
-if (typeof process !== "undefined") {
-  ({ FORCE_COLOR, NODE_DISABLE_COLORS, NO_COLOR, TERM } = process.env || {});
-  isTTY = process.stdout && process.stdout.isTTY;
-}
-var $ = {
-  enabled: !NODE_DISABLE_COLORS && NO_COLOR == null && TERM !== "dumb" && (FORCE_COLOR != null && FORCE_COLOR !== "0" || isTTY)
-};
-function init(x, y) {
-  let rgx = new RegExp(`\\x1b\\[${y}m`, "g");
-  let open = `\x1B[${x}m`, close = `\x1B[${y}m`;
-  return function(txt) {
-    if (!$.enabled || txt == null) return txt;
-    return open + (!!~("" + txt).indexOf(close) ? txt.replace(rgx, close + open) : txt) + close;
-  };
-}
-var reset = init(0, 0);
-var bold = init(1, 22);
-var dim = init(2, 22);
-var italic = init(3, 23);
-var underline = init(4, 24);
-var inverse = init(7, 27);
-var hidden = init(8, 28);
-var strikethrough = init(9, 29);
-var black = init(30, 39);
-var red = init(31, 39);
-var green = init(32, 39);
-var yellow = init(33, 39);
-var blue = init(34, 39);
-var magenta = init(35, 39);
-var cyan = init(36, 39);
-var white = init(37, 39);
-var gray = init(90, 39);
-var grey = init(90, 39);
-var bgBlack = init(40, 49);
-var bgRed = init(41, 49);
-var bgGreen = init(42, 49);
-var bgYellow = init(43, 49);
-var bgBlue = init(44, 49);
-var bgMagenta = init(45, 49);
-var bgCyan = init(46, 49);
-var bgWhite = init(47, 49);
-var MAX_ARGS_HISTORY = 100;
-var COLORS = ["green", "yellow", "blue", "magenta", "cyan", "red"];
-var argsHistory = [];
-var lastTimestamp = Date.now();
-var lastColor = 0;
-var processEnv = typeof process !== "undefined" ? process.env : {};
-globalThis.DEBUG ??= processEnv.DEBUG ?? "";
-globalThis.DEBUG_COLORS ??= processEnv.DEBUG_COLORS ? processEnv.DEBUG_COLORS === "true" : true;
-var topProps = {
-  enable(namespace) {
-    if (typeof namespace === "string") {
-      globalThis.DEBUG = namespace;
-    }
-  },
-  disable() {
-    const prev = globalThis.DEBUG;
-    globalThis.DEBUG = "";
-    return prev;
-  },
-  // this is the core logic to check if logging should happen or not
-  enabled(namespace) {
-    const listenedNamespaces = globalThis.DEBUG.split(",").map((s) => {
-      return s.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
-    });
-    const isListened = listenedNamespaces.some((listenedNamespace) => {
-      if (listenedNamespace === "" || listenedNamespace[0] === "-") return false;
-      return namespace.match(RegExp(listenedNamespace.split("*").join(".*") + "$"));
-    });
-    const isExcluded = listenedNamespaces.some((listenedNamespace) => {
-      if (listenedNamespace === "" || listenedNamespace[0] !== "-") return false;
-      return namespace.match(RegExp(listenedNamespace.slice(1).split("*").join(".*") + "$"));
-    });
-    return isListened && !isExcluded;
-  },
-  log: (...args) => {
-    const [namespace, format, ...rest] = args;
-    const logWithFormatting = console.warn ?? console.log;
-    logWithFormatting(`${namespace} ${format}`, ...rest);
-  },
-  formatters: {}
-  // not implemented
-};
-function debugCreate(namespace) {
-  const instanceProps = {
-    color: COLORS[lastColor++ % COLORS.length],
-    enabled: topProps.enabled(namespace),
-    namespace,
-    log: topProps.log,
-    extend: () => {
-    }
-    // not implemented
-  };
-  const debugCall = (...args) => {
-    const { enabled, namespace: namespace2, color, log } = instanceProps;
-    if (args.length !== 0) {
-      argsHistory.push([namespace2, ...args]);
-    }
-    if (argsHistory.length > MAX_ARGS_HISTORY) {
-      argsHistory.shift();
-    }
-    if (topProps.enabled(namespace2) || enabled) {
-      const stringArgs = args.map((arg) => {
-        if (typeof arg === "string") {
-          return arg;
-        }
-        return safeStringify(arg);
-      });
-      const ms = `+${Date.now() - lastTimestamp}ms`;
-      lastTimestamp = Date.now();
-      if (globalThis.DEBUG_COLORS) {
-        log(colors_exports[color](bold(namespace2)), ...stringArgs, colors_exports[color](ms));
-      } else {
-        log(namespace2, ...stringArgs, ms);
-      }
-    }
-  };
-  return new Proxy(debugCall, {
-    get: (_, prop) => instanceProps[prop],
-    set: (_, prop, value) => instanceProps[prop] = value
-  });
-}
-var Debug = new Proxy(debugCreate, {
-  get: (_, prop) => topProps[prop],
-  set: (_, prop, value) => topProps[prop] = value
-});
-function safeStringify(value, indent = 2) {
-  const cache = /* @__PURE__ */ new Set();
-  return JSON.stringify(
-    value,
-    (key, value2) => {
-      if (typeof value2 === "object" && value2 !== null) {
-        if (cache.has(value2)) {
-          return `[Circular *]`;
-        }
-        cache.add(value2);
-      } else if (typeof value2 === "bigint") {
-        return value2.toString();
-      }
-      return value2;
-    },
-    indent
-  );
-}
-
-// node_modules/@prisma/driver-adapter-utils/dist/index.mjs
-var DriverAdapterError = class extends Error {
-  name = "DriverAdapterError";
-  cause;
-  constructor(payload) {
-    super(typeof payload["message"] === "string" ? payload["message"] : payload.kind);
-    this.cause = payload;
-  }
-};
-var debug = Debug("driver-adapter-utils");
-var ColumnTypeEnum = {
-  // Scalars
-  Int32: 0,
-  Int64: 1,
-  Float: 2,
-  Double: 3,
-  Numeric: 4,
-  Boolean: 5,
-  Character: 6,
-  Text: 7,
-  Date: 8,
-  Time: 9,
-  DateTime: 10,
-  Json: 11,
-  Enum: 12,
-  Bytes: 13,
-  Set: 14,
-  Uuid: 15,
-  // Arrays
-  Int32Array: 64,
-  Int64Array: 65,
-  FloatArray: 66,
-  DoubleArray: 67,
-  NumericArray: 68,
-  BooleanArray: 69,
-  CharacterArray: 70,
-  TextArray: 71,
-  DateArray: 72,
-  TimeArray: 73,
-  DateTimeArray: 74,
-  JsonArray: 75,
-  EnumArray: 76,
-  BytesArray: 77,
-  UuidArray: 78,
-  // Custom
-  UnknownNumber: 128
-};
-var mockAdapterErrors = {
-  queryRaw: new Error("Not implemented: queryRaw"),
-  executeRaw: new Error("Not implemented: executeRaw"),
-  startTransaction: new Error("Not implemented: startTransaction"),
-  executeScript: new Error("Not implemented: executeScript"),
-  dispose: new Error("Not implemented: dispose")
-};
-
-// node_modules/@prisma/adapter-pg/dist/index.mjs
-var import_postgres_array = __toESM(require_postgres_array2(), 1);
-var name = "@prisma/adapter-pg";
-var FIRST_NORMAL_OBJECT_ID = 16384;
-var { types: types2 } = esm_default;
-var { builtins: ScalarColumnType, getTypeParser } = types2;
-var AdditionalScalarColumnType = {
-  NAME: 19
-};
-var ArrayColumnType = {
-  BIT_ARRAY: 1561,
-  BOOL_ARRAY: 1e3,
-  BYTEA_ARRAY: 1001,
-  BPCHAR_ARRAY: 1014,
-  CHAR_ARRAY: 1002,
-  CIDR_ARRAY: 651,
-  DATE_ARRAY: 1182,
-  FLOAT4_ARRAY: 1021,
-  FLOAT8_ARRAY: 1022,
-  INET_ARRAY: 1041,
-  INT2_ARRAY: 1005,
-  INT4_ARRAY: 1007,
-  INT8_ARRAY: 1016,
-  JSONB_ARRAY: 3807,
-  JSON_ARRAY: 199,
-  MONEY_ARRAY: 791,
-  NUMERIC_ARRAY: 1231,
-  OID_ARRAY: 1028,
-  TEXT_ARRAY: 1009,
-  TIMESTAMP_ARRAY: 1115,
-  TIMESTAMPTZ_ARRAY: 1185,
-  TIME_ARRAY: 1183,
-  UUID_ARRAY: 2951,
-  VARBIT_ARRAY: 1563,
-  VARCHAR_ARRAY: 1015,
-  XML_ARRAY: 143
-};
-var UnsupportedNativeDataType = class _UnsupportedNativeDataType extends Error {
-  // map of type codes to type names
-  static typeNames = {
-    16: "bool",
-    17: "bytea",
-    18: "char",
-    19: "name",
-    20: "int8",
-    21: "int2",
-    22: "int2vector",
-    23: "int4",
-    24: "regproc",
-    25: "text",
-    26: "oid",
-    27: "tid",
-    28: "xid",
-    29: "cid",
-    30: "oidvector",
-    32: "pg_ddl_command",
-    71: "pg_type",
-    75: "pg_attribute",
-    81: "pg_proc",
-    83: "pg_class",
-    114: "json",
-    142: "xml",
-    194: "pg_node_tree",
-    269: "table_am_handler",
-    325: "index_am_handler",
-    600: "point",
-    601: "lseg",
-    602: "path",
-    603: "box",
-    604: "polygon",
-    628: "line",
-    650: "cidr",
-    700: "float4",
-    701: "float8",
-    705: "unknown",
-    718: "circle",
-    774: "macaddr8",
-    790: "money",
-    829: "macaddr",
-    869: "inet",
-    1033: "aclitem",
-    1042: "bpchar",
-    1043: "varchar",
-    1082: "date",
-    1083: "time",
-    1114: "timestamp",
-    1184: "timestamptz",
-    1186: "interval",
-    1266: "timetz",
-    1560: "bit",
-    1562: "varbit",
-    1700: "numeric",
-    1790: "refcursor",
-    2202: "regprocedure",
-    2203: "regoper",
-    2204: "regoperator",
-    2205: "regclass",
-    2206: "regtype",
-    2249: "record",
-    2275: "cstring",
-    2276: "any",
-    2277: "anyarray",
-    2278: "void",
-    2279: "trigger",
-    2280: "language_handler",
-    2281: "internal",
-    2283: "anyelement",
-    2287: "_record",
-    2776: "anynonarray",
-    2950: "uuid",
-    2970: "txid_snapshot",
-    3115: "fdw_handler",
-    3220: "pg_lsn",
-    3310: "tsm_handler",
-    3361: "pg_ndistinct",
-    3402: "pg_dependencies",
-    3500: "anyenum",
-    3614: "tsvector",
-    3615: "tsquery",
-    3642: "gtsvector",
-    3734: "regconfig",
-    3769: "regdictionary",
-    3802: "jsonb",
-    3831: "anyrange",
-    3838: "event_trigger",
-    3904: "int4range",
-    3906: "numrange",
-    3908: "tsrange",
-    3910: "tstzrange",
-    3912: "daterange",
-    3926: "int8range",
-    4072: "jsonpath",
-    4089: "regnamespace",
-    4096: "regrole",
-    4191: "regcollation",
-    4451: "int4multirange",
-    4532: "nummultirange",
-    4533: "tsmultirange",
-    4534: "tstzmultirange",
-    4535: "datemultirange",
-    4536: "int8multirange",
-    4537: "anymultirange",
-    4538: "anycompatiblemultirange",
-    4600: "pg_brin_bloom_summary",
-    4601: "pg_brin_minmax_multi_summary",
-    5017: "pg_mcv_list",
-    5038: "pg_snapshot",
-    5069: "xid8",
-    5077: "anycompatible",
-    5078: "anycompatiblearray",
-    5079: "anycompatiblenonarray",
-    5080: "anycompatiblerange"
-  };
-  type;
-  constructor(code) {
-    super();
-    this.type = _UnsupportedNativeDataType.typeNames[code] || "Unknown";
-    this.message = `Unsupported column type ${this.type}`;
-  }
-};
-function fieldToColumnType(fieldTypeId) {
-  switch (fieldTypeId) {
-    case ScalarColumnType.INT2:
-    case ScalarColumnType.INT4:
-      return ColumnTypeEnum.Int32;
-    case ScalarColumnType.INT8:
-      return ColumnTypeEnum.Int64;
-    case ScalarColumnType.FLOAT4:
-      return ColumnTypeEnum.Float;
-    case ScalarColumnType.FLOAT8:
-      return ColumnTypeEnum.Double;
-    case ScalarColumnType.BOOL:
-      return ColumnTypeEnum.Boolean;
-    case ScalarColumnType.DATE:
-      return ColumnTypeEnum.Date;
-    case ScalarColumnType.TIME:
-    case ScalarColumnType.TIMETZ:
-      return ColumnTypeEnum.Time;
-    case ScalarColumnType.TIMESTAMP:
-    case ScalarColumnType.TIMESTAMPTZ:
-      return ColumnTypeEnum.DateTime;
-    case ScalarColumnType.NUMERIC:
-    case ScalarColumnType.MONEY:
-      return ColumnTypeEnum.Numeric;
-    case ScalarColumnType.JSON:
-    case ScalarColumnType.JSONB:
-      return ColumnTypeEnum.Json;
-    case ScalarColumnType.UUID:
-      return ColumnTypeEnum.Uuid;
-    case ScalarColumnType.OID:
-      return ColumnTypeEnum.Int64;
-    case ScalarColumnType.BPCHAR:
-    case ScalarColumnType.TEXT:
-    case ScalarColumnType.VARCHAR:
-    case ScalarColumnType.BIT:
-    case ScalarColumnType.VARBIT:
-    case ScalarColumnType.INET:
-    case ScalarColumnType.CIDR:
-    case ScalarColumnType.XML:
-    case AdditionalScalarColumnType.NAME:
-      return ColumnTypeEnum.Text;
-    case ScalarColumnType.BYTEA:
-      return ColumnTypeEnum.Bytes;
-    case ArrayColumnType.INT2_ARRAY:
-    case ArrayColumnType.INT4_ARRAY:
-      return ColumnTypeEnum.Int32Array;
-    case ArrayColumnType.FLOAT4_ARRAY:
-      return ColumnTypeEnum.FloatArray;
-    case ArrayColumnType.FLOAT8_ARRAY:
-      return ColumnTypeEnum.DoubleArray;
-    case ArrayColumnType.NUMERIC_ARRAY:
-    case ArrayColumnType.MONEY_ARRAY:
-      return ColumnTypeEnum.NumericArray;
-    case ArrayColumnType.BOOL_ARRAY:
-      return ColumnTypeEnum.BooleanArray;
-    case ArrayColumnType.CHAR_ARRAY:
-      return ColumnTypeEnum.CharacterArray;
-    case ArrayColumnType.BPCHAR_ARRAY:
-    case ArrayColumnType.TEXT_ARRAY:
-    case ArrayColumnType.VARCHAR_ARRAY:
-    case ArrayColumnType.VARBIT_ARRAY:
-    case ArrayColumnType.BIT_ARRAY:
-    case ArrayColumnType.INET_ARRAY:
-    case ArrayColumnType.CIDR_ARRAY:
-    case ArrayColumnType.XML_ARRAY:
-      return ColumnTypeEnum.TextArray;
-    case ArrayColumnType.DATE_ARRAY:
-      return ColumnTypeEnum.DateArray;
-    case ArrayColumnType.TIME_ARRAY:
-      return ColumnTypeEnum.TimeArray;
-    case ArrayColumnType.TIMESTAMP_ARRAY:
-      return ColumnTypeEnum.DateTimeArray;
-    case ArrayColumnType.TIMESTAMPTZ_ARRAY:
-      return ColumnTypeEnum.DateTimeArray;
-    case ArrayColumnType.JSON_ARRAY:
-    case ArrayColumnType.JSONB_ARRAY:
-      return ColumnTypeEnum.JsonArray;
-    case ArrayColumnType.BYTEA_ARRAY:
-      return ColumnTypeEnum.BytesArray;
-    case ArrayColumnType.UUID_ARRAY:
-      return ColumnTypeEnum.UuidArray;
-    case ArrayColumnType.INT8_ARRAY:
-    case ArrayColumnType.OID_ARRAY:
-      return ColumnTypeEnum.Int64Array;
-    default:
-      if (fieldTypeId >= FIRST_NORMAL_OBJECT_ID) {
-        return ColumnTypeEnum.Text;
-      }
-      throw new UnsupportedNativeDataType(fieldTypeId);
-  }
-}
-function normalize_array(element_normalizer) {
-  return (str) => (0, import_postgres_array.parse)(str, element_normalizer);
-}
-function normalize_numeric(numeric) {
-  return numeric;
-}
-function normalize_date(date5) {
-  return date5;
-}
-function normalize_timestamp(time3) {
-  return `${time3.replace(" ", "T")}+00:00`;
-}
-function normalize_timestamptz(time3) {
-  return time3.replace(" ", "T").replace(/[+-]\d{2}(:\d{2})?$/, "+00:00");
-}
-function normalize_time(time3) {
-  return time3;
-}
-function normalize_timez(time3) {
-  return time3.replace(/[+-]\d{2}(:\d{2})?$/, "");
-}
-function normalize_money(money) {
-  return money.slice(1);
-}
-function normalize_xml(xml) {
-  return xml;
-}
-function toJson(json2) {
-  return json2;
-}
-function encodeBuffer(buffer) {
-  return Array.from(new Uint8Array(buffer));
-}
-var parsePgBytes = getTypeParser(ScalarColumnType.BYTEA);
-var parseBytesArray = getTypeParser(ArrayColumnType.BYTEA_ARRAY);
-function normalizeByteaArray(serializedBytesArray) {
-  const buffers = parseBytesArray(serializedBytesArray);
-  return buffers.map((buf) => buf ? encodeBuffer(buf) : null);
-}
-function convertBytes(serializedBytes) {
-  const buffer = parsePgBytes(serializedBytes);
-  return encodeBuffer(buffer);
-}
-function normalizeBit(bit) {
-  return bit;
-}
-var customParsers = {
-  [ScalarColumnType.NUMERIC]: normalize_numeric,
-  [ArrayColumnType.NUMERIC_ARRAY]: normalize_array(normalize_numeric),
-  [ScalarColumnType.TIME]: normalize_time,
-  [ArrayColumnType.TIME_ARRAY]: normalize_array(normalize_time),
-  [ScalarColumnType.TIMETZ]: normalize_timez,
-  [ScalarColumnType.DATE]: normalize_date,
-  [ArrayColumnType.DATE_ARRAY]: normalize_array(normalize_date),
-  [ScalarColumnType.TIMESTAMP]: normalize_timestamp,
-  [ArrayColumnType.TIMESTAMP_ARRAY]: normalize_array(normalize_timestamp),
-  [ScalarColumnType.TIMESTAMPTZ]: normalize_timestamptz,
-  [ArrayColumnType.TIMESTAMPTZ_ARRAY]: normalize_array(normalize_timestamptz),
-  [ScalarColumnType.MONEY]: normalize_money,
-  [ArrayColumnType.MONEY_ARRAY]: normalize_array(normalize_money),
-  [ScalarColumnType.JSON]: toJson,
-  [ArrayColumnType.JSON_ARRAY]: normalize_array(toJson),
-  [ScalarColumnType.JSONB]: toJson,
-  [ArrayColumnType.JSONB_ARRAY]: normalize_array(toJson),
-  [ScalarColumnType.BYTEA]: convertBytes,
-  [ArrayColumnType.BYTEA_ARRAY]: normalizeByteaArray,
-  [ArrayColumnType.BIT_ARRAY]: normalize_array(normalizeBit),
-  [ArrayColumnType.VARBIT_ARRAY]: normalize_array(normalizeBit),
-  [ArrayColumnType.XML_ARRAY]: normalize_array(normalize_xml)
-};
-function mapArg(arg, argType) {
-  if (arg === null) {
-    return null;
-  }
-  if (Array.isArray(arg) && argType.arity === "list") {
-    return arg.map((value) => mapArg(value, argType));
-  }
-  if (typeof arg === "string" && argType.scalarType === "datetime") {
-    arg = new Date(arg);
-  }
-  if (arg instanceof Date) {
-    switch (argType.dbType) {
-      case "TIME":
-      case "TIMETZ":
-        return formatTime(arg);
-      case "DATE":
-        return formatDate(arg);
-      default:
-        return formatDateTime(arg);
-    }
-  }
-  if (typeof arg === "string" && argType.scalarType === "bytes") {
-    return Buffer.from(arg, "base64");
-  }
-  if (Array.isArray(arg) && argType.scalarType === "bytes") {
-    return Buffer.from(arg);
-  }
-  if (ArrayBuffer.isView(arg)) {
-    return Buffer.from(arg.buffer, arg.byteOffset, arg.byteLength);
-  }
-  return arg;
-}
-function formatDateTime(date5) {
-  const pad = (n, z = 2) => String(n).padStart(z, "0");
-  const ms = date5.getUTCMilliseconds();
-  return pad(date5.getUTCFullYear(), 4) + "-" + pad(date5.getUTCMonth() + 1) + "-" + pad(date5.getUTCDate()) + " " + pad(date5.getUTCHours()) + ":" + pad(date5.getUTCMinutes()) + ":" + pad(date5.getUTCSeconds()) + (ms ? "." + String(ms).padStart(3, "0") : "");
-}
-function formatDate(date5) {
-  const pad = (n, z = 2) => String(n).padStart(z, "0");
-  return pad(date5.getUTCFullYear(), 4) + "-" + pad(date5.getUTCMonth() + 1) + "-" + pad(date5.getUTCDate());
-}
-function formatTime(date5) {
-  const pad = (n, z = 2) => String(n).padStart(z, "0");
-  const ms = date5.getUTCMilliseconds();
-  return pad(date5.getUTCHours()) + ":" + pad(date5.getUTCMinutes()) + ":" + pad(date5.getUTCSeconds()) + (ms ? "." + String(ms).padStart(3, "0") : "");
-}
-var TLS_ERRORS = /* @__PURE__ */ new Set([
-  "UNABLE_TO_GET_ISSUER_CERT",
-  "UNABLE_TO_GET_CRL",
-  "UNABLE_TO_DECRYPT_CERT_SIGNATURE",
-  "UNABLE_TO_DECRYPT_CRL_SIGNATURE",
-  "UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY",
-  "CERT_SIGNATURE_FAILURE",
-  "CRL_SIGNATURE_FAILURE",
-  "CERT_NOT_YET_VALID",
-  "CERT_HAS_EXPIRED",
-  "CRL_NOT_YET_VALID",
-  "CRL_HAS_EXPIRED",
-  "ERROR_IN_CERT_NOT_BEFORE_FIELD",
-  "ERROR_IN_CERT_NOT_AFTER_FIELD",
-  "ERROR_IN_CRL_LAST_UPDATE_FIELD",
-  "ERROR_IN_CRL_NEXT_UPDATE_FIELD",
-  "DEPTH_ZERO_SELF_SIGNED_CERT",
-  "SELF_SIGNED_CERT_IN_CHAIN",
-  "UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
-  "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
-  "CERT_CHAIN_TOO_LONG",
-  "CERT_REVOKED",
-  "INVALID_CA",
-  "INVALID_PURPOSE",
-  "CERT_UNTRUSTED",
-  "CERT_REJECTED",
-  "HOSTNAME_MISMATCH",
-  "ERR_TLS_CERT_ALTNAME_FORMAT",
-  "ERR_TLS_CERT_ALTNAME_INVALID"
-]);
-var SOCKET_ERRORS = /* @__PURE__ */ new Set(["ENOTFOUND", "ECONNREFUSED", "ECONNRESET", "ETIMEDOUT"]);
-function convertDriverError(error46) {
-  if (isSocketError(error46)) {
-    return mapSocketError(error46);
-  }
-  if (isTlsError(error46)) {
-    return {
-      kind: "TlsConnectionError",
-      reason: error46.message
-    };
-  }
-  if (isDriverError(error46)) {
-    return {
-      originalCode: error46.code,
-      originalMessage: error46.message,
-      ...mapDriverError(error46)
-    };
-  }
-  throw error46;
-}
-function mapDriverError(error46) {
-  switch (error46.code) {
-    case "22001":
-      return {
-        kind: "LengthMismatch",
-        column: error46.column
-      };
-    case "22003":
-      return {
-        kind: "ValueOutOfRange",
-        cause: error46.message
-      };
-    case "23505": {
-      const fields = error46.detail?.match(/Key \(([^)]+)\)/)?.at(1)?.split(", ");
-      return {
-        kind: "UniqueConstraintViolation",
-        constraint: fields !== void 0 ? { fields } : void 0
-      };
-    }
-    case "23502": {
-      const fields = error46.detail?.match(/Key \(([^)]+)\)/)?.at(1)?.split(", ");
-      return {
-        kind: "NullConstraintViolation",
-        constraint: fields !== void 0 ? { fields } : void 0
-      };
-    }
-    case "23503": {
-      let constraint;
-      if (error46.column) {
-        constraint = { fields: [error46.column] };
-      } else if (error46.constraint) {
-        constraint = { index: error46.constraint };
-      }
-      return {
-        kind: "ForeignKeyConstraintViolation",
-        constraint
-      };
-    }
-    case "3D000":
-      return {
-        kind: "DatabaseDoesNotExist",
-        db: error46.message.split(" ").at(1)?.split('"').at(1)
-      };
-    case "28000":
-      return {
-        kind: "DatabaseAccessDenied",
-        db: error46.message.split(",").find((s) => s.startsWith(" database"))?.split('"').at(1)
-      };
-    case "28P01":
-      return {
-        kind: "AuthenticationFailed",
-        user: error46.message.split(" ").pop()?.split('"').at(1)
-      };
-    case "40001":
-      return {
-        kind: "TransactionWriteConflict"
-      };
-    case "42P01":
-      return {
-        kind: "TableDoesNotExist",
-        table: error46.message.split(" ").at(1)?.split('"').at(1)
-      };
-    case "42703":
-      return {
-        kind: "ColumnNotFound",
-        column: error46.message.split(" ").at(1)?.split('"').at(1)
-      };
-    case "42P04":
-      return {
-        kind: "DatabaseAlreadyExists",
-        db: error46.message.split(" ").at(1)?.split('"').at(1)
-      };
-    case "53300":
-      return {
-        kind: "TooManyConnections",
-        cause: error46.message
-      };
-    default:
-      return {
-        kind: "postgres",
-        code: error46.code ?? "N/A",
-        severity: error46.severity ?? "N/A",
-        message: error46.message,
-        detail: error46.detail,
-        column: error46.column,
-        hint: error46.hint
-      };
-  }
-}
-function isDriverError(error46) {
-  return typeof error46.code === "string" && typeof error46.message === "string" && typeof error46.severity === "string" && (typeof error46.detail === "string" || error46.detail === void 0) && (typeof error46.column === "string" || error46.column === void 0) && (typeof error46.hint === "string" || error46.hint === void 0);
-}
-function mapSocketError(error46) {
-  switch (error46.code) {
-    case "ENOTFOUND":
-    case "ECONNREFUSED":
-      return {
-        kind: "DatabaseNotReachable",
-        host: error46.address ?? error46.hostname,
-        port: error46.port
-      };
-    case "ECONNRESET":
-      return {
-        kind: "ConnectionClosed"
-      };
-    case "ETIMEDOUT":
-      return {
-        kind: "SocketTimeout"
-      };
-  }
-}
-function isSocketError(error46) {
-  return typeof error46.code === "string" && typeof error46.syscall === "string" && typeof error46.errno === "number" && SOCKET_ERRORS.has(error46.code);
-}
-function isTlsError(error46) {
-  if (typeof error46.code === "string") {
-    return TLS_ERRORS.has(error46.code);
-  }
-  switch (error46.message) {
-    case "The server does not support SSL connections":
-    case "There was an error establishing an SSL connection":
-      return true;
-  }
-  return false;
-}
-var types22 = esm_default.types;
-var debug2 = Debug("prisma:driver-adapter:pg");
-var PgQueryable = class {
-  constructor(client, pgOptions) {
-    this.client = client;
-    this.pgOptions = pgOptions;
-  }
-  provider = "postgres";
-  adapterName = name;
-  /**
-   * Execute a query given as SQL, interpolating the given parameters.
-   */
-  async queryRaw(query) {
-    const tag = "[js::query_raw]";
-    debug2(`${tag} %O`, query);
-    const { fields, rows } = await this.performIO(query);
-    const columnNames = fields.map((field) => field.name);
-    let columnTypes = [];
-    try {
-      columnTypes = fields.map((field) => fieldToColumnType(field.dataTypeID));
-    } catch (e) {
-      if (e instanceof UnsupportedNativeDataType) {
-        throw new DriverAdapterError({
-          kind: "UnsupportedNativeDataType",
-          type: e.type
-        });
-      }
-      throw e;
-    }
-    const udtParser = this.pgOptions?.userDefinedTypeParser;
-    if (udtParser) {
-      for (let i = 0; i < fields.length; i++) {
-        const field = fields[i];
-        if (field.dataTypeID >= FIRST_NORMAL_OBJECT_ID && !Object.hasOwn(customParsers, field.dataTypeID)) {
-          for (let j = 0; j < rows.length; j++) {
-            rows[j][i] = await udtParser(field.dataTypeID, rows[j][i], this);
-          }
-        }
-      }
-    }
-    return {
-      columnNames,
-      columnTypes,
-      rows
-    };
-  }
-  /**
-   * Execute a query given as SQL, interpolating the given parameters and
-   * returning the number of affected rows.
-   * Note: Queryable expects a u64, but napi.rs only supports u32.
-   */
-  async executeRaw(query) {
-    const tag = "[js::execute_raw]";
-    debug2(`${tag} %O`, query);
-    return (await this.performIO(query)).rowCount ?? 0;
-  }
-  /**
-   * Run a query against the database, returning the result set.
-   * Should the query fail due to a connection error, the connection is
-   * marked as unhealthy.
-   */
-  async performIO(query) {
-    const { sql, args } = query;
-    const values = args.map((arg, i) => mapArg(arg, query.argTypes[i]));
-    try {
-      const result = await this.client.query(
-        {
-          text: sql,
-          values,
-          rowMode: "array",
-          types: {
-            // This is the error expected:
-            // No overload matches this call.
-            // The last overload gave the following error.
-            // Type '(oid: number, format?: any) => (json: string) => unknown' is not assignable to type '{ <T>(oid: number): TypeParser<string, string | T>; <T>(oid: number, format: "text"): TypeParser<string, string | T>; <T>(oid: number, format: "binary"): TypeParser<...>; }'.
-            //   Type '(json: string) => unknown' is not assignable to type 'TypeParser<Buffer, any>'.
-            //     Types of parameters 'json' and 'value' are incompatible.
-            //       Type 'Buffer' is not assignable to type 'string'.ts(2769)
-            //
-            // Because pg-types types expect us to handle both binary and text protocol versions,
-            // where as far we can see, pg will ever pass only text version.
-            //
-            // @ts-expect-error
-            getTypeParser: (oid, format) => {
-              if (format === "text" && customParsers[oid]) {
-                return customParsers[oid];
-              }
-              return types22.getTypeParser(oid, format);
-            }
-          }
-        },
-        values
-      );
-      return result;
-    } catch (e) {
-      this.onError(e);
-    }
-  }
-  onError(error46) {
-    debug2("Error in performIO: %O", error46);
-    throw new DriverAdapterError(convertDriverError(error46));
-  }
-};
-var PgTransaction = class extends PgQueryable {
-  constructor(client, options, pgOptions, cleanup) {
-    super(client, pgOptions);
-    this.options = options;
-    this.pgOptions = pgOptions;
-    this.cleanup = cleanup;
-  }
-  async commit() {
-    debug2(`[js::commit]`);
-    this.cleanup?.();
-    this.client.release();
-  }
-  async rollback() {
-    debug2(`[js::rollback]`);
-    this.cleanup?.();
-    this.client.release();
-  }
-};
-var PrismaPgAdapter = class extends PgQueryable {
-  constructor(client, pgOptions, release) {
-    super(client);
-    this.pgOptions = pgOptions;
-    this.release = release;
-  }
-  async startTransaction(isolationLevel) {
-    const options = {
-      usePhantomQuery: false
-    };
-    const tag = "[js::startTransaction]";
-    debug2("%s options: %O", tag, options);
-    const conn = await this.client.connect().catch((error46) => this.onError(error46));
-    const onError = (err) => {
-      debug2(`Error from pool connection: ${err.message} %O`, err);
-      this.pgOptions?.onConnectionError?.(err);
-    };
-    conn.on("error", onError);
-    const cleanup = () => {
-      conn.removeListener("error", onError);
-    };
-    try {
-      const tx = new PgTransaction(conn, options, this.pgOptions, cleanup);
-      await tx.executeRaw({ sql: "BEGIN", args: [], argTypes: [] });
-      if (isolationLevel) {
-        await tx.executeRaw({
-          sql: `SET TRANSACTION ISOLATION LEVEL ${isolationLevel}`,
-          args: [],
-          argTypes: []
-        });
-      }
-      return tx;
-    } catch (error46) {
-      cleanup();
-      conn.release(error46);
-      this.onError(error46);
-    }
-  }
-  async executeScript(script) {
-    const statements = script.split(";").map((stmt) => stmt.trim()).filter((stmt) => stmt.length > 0);
-    for (const stmt of statements) {
-      try {
-        await this.client.query(stmt);
-      } catch (error46) {
-        this.onError(error46);
-      }
-    }
-  }
-  getConnectionInfo() {
-    return {
-      schemaName: this.pgOptions?.schema,
-      supportsRelationJoins: true
-    };
-  }
-  async dispose() {
-    return this.release?.();
-  }
-  underlyingDriver() {
-    return this.client;
-  }
-};
-var PrismaPgAdapterFactory = class {
-  constructor(poolOrConfig, options) {
-    this.options = options;
-    if (poolOrConfig instanceof esm_default.Pool) {
-      this.externalPool = poolOrConfig;
-      this.config = poolOrConfig.options;
-    } else {
-      this.externalPool = null;
-      this.config = poolOrConfig;
-    }
-  }
-  provider = "postgres";
-  adapterName = name;
-  config;
-  externalPool;
-  async connect() {
-    const client = this.externalPool ?? new esm_default.Pool(this.config);
-    const onIdleClientError = (err) => {
-      debug2(`Error from idle pool client: ${err.message} %O`, err);
-      this.options?.onPoolError?.(err);
-    };
-    client.on("error", onIdleClientError);
-    return new PrismaPgAdapter(client, this.options, async () => {
-      if (this.externalPool) {
-        if (this.options?.disposeExternalPool) {
-          await this.externalPool.end();
-          this.externalPool = null;
-        } else {
-          this.externalPool.removeListener("error", onIdleClientError);
-        }
-      } else {
-        await client.end();
-      }
-    });
-  }
-  async connectToShadowDb() {
-    const conn = await this.connect();
-    const database = `prisma_migrate_shadow_db_${globalThis.crypto.randomUUID()}`;
-    await conn.executeScript(`CREATE DATABASE "${database}"`);
-    const client = new esm_default.Pool({ ...this.config, database });
-    return new PrismaPgAdapter(client, void 0, async () => {
-      await conn.executeScript(`DROP DATABASE "${database}"`);
-      await client.end();
-    });
-  }
-};
-
-// src/client.ts
-var globalForPrisma = global;
-var createPrismaClient = (connectionString, logLevel, poolConfig) => {
-  const dbUrl = connectionString || process.env.DATABASE_URL;
-  if (!dbUrl) {
-    throw new Error("DATABASE_URL or connectionString must be provided");
-  }
-  const pool = new Pool({
-    connectionString: dbUrl,
-    ...poolConfig
-  });
-  const adapter = new PrismaPgAdapterFactory(pool);
-  const isDevelopment = process.env.NODE_ENV === "development";
-  const log = logLevel ?? (isDevelopment ? "query" : "error");
-  return new import_client.PrismaClient({
-    adapter,
-    log: [log]
-  });
-};
-var prisma = globalForPrisma.prisma || createPrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 // node_modules/zod/v4/classic/external.js
 var external_exports = {};
@@ -19744,37 +18693,31 @@ function date4(params) {
 // node_modules/zod/v4/classic/external.js
 config(en_default());
 
-// src/modules/classes/classes.dto.ts
+// src/modules/classes/dto/search.dto.ts
 var import_client2 = require("@prisma/client");
-var danceStyleValues = Object.values(import_client2.DanceStyle).map(
+
+// src/modules/classes/dto/shared.ts
+var import_client = require("@prisma/client");
+var danceStyleValues = Object.values(import_client.DanceStyle).map(
   (v) => v.toLowerCase()
 );
 var DanceStyleFilterSchema = external_exports.enum([
   ...danceStyleValues,
   "any"
 ]);
-var SearchQueryParamsSchema = external_exports.object({
-  type: DanceStyleFilterSchema.default("any")
-});
 var InstructorInfoSchema = external_exports.object({
   id: external_exports.uuid(),
   name: external_exports.string(),
   email: external_exports.email()
 });
-var DanceStyleSchema = external_exports.enum(import_client2.DanceStyle);
-var DanceLevelSchema = external_exports.enum(import_client2.DanceLevel);
-var ClassWithInstructorSchema = external_exports.object({
-  id: external_exports.uuid(),
-  title: external_exports.string(),
-  description: external_exports.string().nullable(),
-  style: DanceStyleSchema,
-  level: DanceLevelSchema,
-  maxSpots: external_exports.number().int(),
-  durationMin: external_exports.number().int(),
-  createdAt: external_exports.date(),
-  updatedAt: external_exports.date(),
-  instructor: InstructorInfoSchema.nullable()
-});
+var DanceStyleSchema = external_exports.enum(Object.values(import_client.DanceStyle));
+var DanceLevelSchema = external_exports.enum(Object.values(import_client.DanceLevel));
+var BookingStatusSchema = external_exports.enum([
+  import_client.BookingStatus.CONFIRMED,
+  import_client.BookingStatus.CANCELLED
+]);
+
+// src/modules/classes/dto/repository.dto.ts
 var ClassDefinitionWithInstructorSchema = external_exports.object({
   id: external_exports.uuid(),
   title: external_exports.string(),
@@ -19798,15 +18741,6 @@ var ClassInstanceWithDefinitionSchema = external_exports.object({
   updatedAt: external_exports.date(),
   definition: ClassDefinitionWithInstructorSchema
 });
-var SearchResponseSchema = external_exports.object({
-  classes: external_exports.array(ClassInstanceWithDefinitionSchema),
-  count: external_exports.number()
-});
-var DANCE_STYLE_MAP = {
-  salsa: import_client2.DanceStyle.SALSA,
-  bachata: import_client2.DanceStyle.BACHATA,
-  reggaeton: import_client2.DanceStyle.REGGAETON
-};
 var classInstanceIncludeDefinition = {
   definition: {
     include: {
@@ -19821,34 +18755,1318 @@ var classInstanceIncludeDefinition = {
   }
 };
 
-// src/modules/classes/classes.dao.ts
-var findClasses = async (where) => {
-  const instances = await prisma.classInstance.findMany({
-    where,
-    include: classInstanceIncludeDefinition,
-    orderBy: {
-      createdAt: "desc"
-    }
-  });
-  return instances;
+// src/modules/classes/dto/search.dto.ts
+var SearchQueryParamsSchema = external_exports.object({
+  type: DanceStyleFilterSchema.default("any")
+});
+var SearchResponseSchema = external_exports.object({
+  classes: external_exports.array(ClassInstanceWithDefinitionSchema),
+  count: external_exports.number()
+});
+var DANCE_STYLE_MAP = {
+  salsa: import_client2.DanceStyle.SALSA,
+  bachata: import_client2.DanceStyle.BACHATA,
+  reggaeton: import_client2.DanceStyle.REGGAETON
 };
 
-// src/modules/classes/classes.service.ts
-var searchClasses = async (typeFilter) => {
-  const where = typeFilter !== "any" ? { definition: { style: DANCE_STYLE_MAP[typeFilter] } } : {};
-  const classes = await findClasses(where);
-  return {
-    classes,
-    count: classes.length
-  };
-};
+// src/modules/classes/dto/booking.dto.ts
+var BookClassRequestSchema = external_exports.object({
+  email: external_exports.email(),
+  classInstanceId: external_exports.uuid()
+});
+var BookClassHeadersSchema = external_exports.object({
+  "idempotency-key": external_exports.string().min(1, "idempotency-key header is required")
+});
+var BookClassRequestBodySchema = external_exports.string().min(1, "Request body is required").transform((str, ctx) => {
+  try {
+    return JSON.parse(str);
+  } catch {
+    ctx.addIssue({
+      code: "custom",
+      message: "Invalid JSON in request body"
+    });
+    return external_exports.NEVER;
+  }
+}).pipe(BookClassRequestSchema);
+var BookingWithRelationsSchema = external_exports.object({
+  id: external_exports.uuid(),
+  userId: external_exports.uuid(),
+  classInstanceId: external_exports.uuid(),
+  status: BookingStatusSchema,
+  idempotencyKey: external_exports.string(),
+  createdAt: external_exports.date(),
+  updatedAt: external_exports.date(),
+  user: InstructorInfoSchema,
+  classInstance: ClassInstanceWithDefinitionSchema
+});
 
 // src/utils/validation.ts
 function formatValidationErrors(error46) {
   return error46.issues.map((err) => `${err.path.join(".")}: ${err.message}`).join(", ");
 }
 
-// src/modules/classes/classes.controller.ts
+// src/modules/classes/domain/errors/not-found.error.ts
+var NotFoundError = class _NotFoundError extends Error {
+  statusCode = 404;
+  constructor(message) {
+    super(message);
+    this.name = "NotFoundError";
+    Object.setPrototypeOf(this, _NotFoundError.prototype);
+  }
+};
+var ClassInstanceNotFoundError = class _ClassInstanceNotFoundError extends NotFoundError {
+  constructor(classInstanceId) {
+    const message = classInstanceId ? `Class instance not found: ${classInstanceId}` : "Class instance not found";
+    super(message);
+    this.name = "ClassInstanceNotFoundError";
+    Object.setPrototypeOf(this, _ClassInstanceNotFoundError.prototype);
+  }
+};
+var UserNotFoundError = class _UserNotFoundError extends NotFoundError {
+  constructor(email3) {
+    const message = email3 ? `User not found: ${email3}` : "User not found";
+    super(message);
+    this.name = "UserNotFoundError";
+    Object.setPrototypeOf(this, _UserNotFoundError.prototype);
+  }
+};
+
+// src/modules/classes/domain/errors/conflict.error.ts
+var ConflictError = class _ConflictError extends Error {
+  statusCode = 409;
+  constructor(message) {
+    super(message);
+    this.name = "ConflictError";
+    Object.setPrototypeOf(this, _ConflictError.prototype);
+  }
+};
+var ClassFullError = class _ClassFullError extends ConflictError {
+  constructor(classInstanceId) {
+    const message = classInstanceId ? `Class is full: ${classInstanceId}` : "Class is full";
+    super(message);
+    this.name = "ClassFullError";
+    Object.setPrototypeOf(this, _ClassFullError.prototype);
+  }
+};
+var DuplicateBookingError = class _DuplicateBookingError extends ConflictError {
+  constructor(userId, classInstanceId) {
+    const message = userId && classInstanceId ? `User already booked this class: user=${userId}, class=${classInstanceId}` : "User already booked this class";
+    super(message);
+    this.name = "DuplicateBookingError";
+    Object.setPrototypeOf(this, _DuplicateBookingError.prototype);
+  }
+};
+
+// src/modules/classes/application/classes.application.service.ts
+var ClassesApplicationService = class {
+  constructor(classInstanceRepository, userRepository, bookingRepository) {
+    this.classInstanceRepository = classInstanceRepository;
+    this.userRepository = userRepository;
+    this.bookingRepository = bookingRepository;
+  }
+  async searchClasses(typeFilter) {
+    const where = typeFilter !== "any" ? { definition: { style: DANCE_STYLE_MAP[typeFilter] } } : {};
+    const classes = await this.classInstanceRepository.findMany(where);
+    return {
+      classes,
+      count: classes.length
+    };
+  }
+  async bookClass(params) {
+    const [classInstance, user] = await Promise.all([
+      this.classInstanceRepository.findById(params.classInstanceId),
+      this.userRepository.findByEmail(params.email)
+    ]);
+    if (!classInstance) {
+      throw new ClassInstanceNotFoundError(params.classInstanceId);
+    }
+    if (!user) {
+      throw new UserNotFoundError(params.email);
+    }
+    if (classInstance.bookedCount >= classInstance.definition.maxSpots) {
+      throw new ClassFullError(classInstance.id);
+    }
+    const existingBooking = await this.bookingRepository.findByUserAndClass(
+      user.id,
+      classInstance.id
+    );
+    if (existingBooking) {
+      throw new DuplicateBookingError(user.id, classInstance.id);
+    }
+    const booking = await this.bookingRepository.createWithTransaction({
+      userId: user.id,
+      classInstanceId: classInstance.id,
+      idempotencyKey: params.idempotencyKey,
+      email: params.email
+    });
+    return booking;
+  }
+};
+
+// src/client.ts
+var import_client3 = require("@prisma/client");
+
+// node_modules/pg/esm/index.mjs
+var import_lib = __toESM(require_lib2(), 1);
+var Client = import_lib.default.Client;
+var Pool = import_lib.default.Pool;
+var Connection = import_lib.default.Connection;
+var types = import_lib.default.types;
+var Query = import_lib.default.Query;
+var DatabaseError = import_lib.default.DatabaseError;
+var escapeIdentifier = import_lib.default.escapeIdentifier;
+var escapeLiteral = import_lib.default.escapeLiteral;
+var Result = import_lib.default.Result;
+var TypeOverrides = import_lib.default.TypeOverrides;
+var defaults2 = import_lib.default.defaults;
+var esm_default = import_lib.default;
+
+// node_modules/@prisma/debug/dist/index.mjs
+var __defProp2 = Object.defineProperty;
+var __export2 = (target, all) => {
+  for (var name2 in all)
+    __defProp2(target, name2, { get: all[name2], enumerable: true });
+};
+var colors_exports = {};
+__export2(colors_exports, {
+  $: () => $,
+  bgBlack: () => bgBlack,
+  bgBlue: () => bgBlue,
+  bgCyan: () => bgCyan,
+  bgGreen: () => bgGreen,
+  bgMagenta: () => bgMagenta,
+  bgRed: () => bgRed,
+  bgWhite: () => bgWhite,
+  bgYellow: () => bgYellow,
+  black: () => black,
+  blue: () => blue,
+  bold: () => bold,
+  cyan: () => cyan,
+  dim: () => dim,
+  gray: () => gray,
+  green: () => green,
+  grey: () => grey,
+  hidden: () => hidden,
+  inverse: () => inverse,
+  italic: () => italic,
+  magenta: () => magenta,
+  red: () => red,
+  reset: () => reset,
+  strikethrough: () => strikethrough,
+  underline: () => underline,
+  white: () => white,
+  yellow: () => yellow
+});
+var FORCE_COLOR;
+var NODE_DISABLE_COLORS;
+var NO_COLOR;
+var TERM;
+var isTTY = true;
+if (typeof process !== "undefined") {
+  ({ FORCE_COLOR, NODE_DISABLE_COLORS, NO_COLOR, TERM } = process.env || {});
+  isTTY = process.stdout && process.stdout.isTTY;
+}
+var $ = {
+  enabled: !NODE_DISABLE_COLORS && NO_COLOR == null && TERM !== "dumb" && (FORCE_COLOR != null && FORCE_COLOR !== "0" || isTTY)
+};
+function init(x, y) {
+  let rgx = new RegExp(`\\x1b\\[${y}m`, "g");
+  let open = `\x1B[${x}m`, close = `\x1B[${y}m`;
+  return function(txt) {
+    if (!$.enabled || txt == null) return txt;
+    return open + (!!~("" + txt).indexOf(close) ? txt.replace(rgx, close + open) : txt) + close;
+  };
+}
+var reset = init(0, 0);
+var bold = init(1, 22);
+var dim = init(2, 22);
+var italic = init(3, 23);
+var underline = init(4, 24);
+var inverse = init(7, 27);
+var hidden = init(8, 28);
+var strikethrough = init(9, 29);
+var black = init(30, 39);
+var red = init(31, 39);
+var green = init(32, 39);
+var yellow = init(33, 39);
+var blue = init(34, 39);
+var magenta = init(35, 39);
+var cyan = init(36, 39);
+var white = init(37, 39);
+var gray = init(90, 39);
+var grey = init(90, 39);
+var bgBlack = init(40, 49);
+var bgRed = init(41, 49);
+var bgGreen = init(42, 49);
+var bgYellow = init(43, 49);
+var bgBlue = init(44, 49);
+var bgMagenta = init(45, 49);
+var bgCyan = init(46, 49);
+var bgWhite = init(47, 49);
+var MAX_ARGS_HISTORY = 100;
+var COLORS = ["green", "yellow", "blue", "magenta", "cyan", "red"];
+var argsHistory = [];
+var lastTimestamp = Date.now();
+var lastColor = 0;
+var processEnv = typeof process !== "undefined" ? process.env : {};
+globalThis.DEBUG ??= processEnv.DEBUG ?? "";
+globalThis.DEBUG_COLORS ??= processEnv.DEBUG_COLORS ? processEnv.DEBUG_COLORS === "true" : true;
+var topProps = {
+  enable(namespace) {
+    if (typeof namespace === "string") {
+      globalThis.DEBUG = namespace;
+    }
+  },
+  disable() {
+    const prev = globalThis.DEBUG;
+    globalThis.DEBUG = "";
+    return prev;
+  },
+  // this is the core logic to check if logging should happen or not
+  enabled(namespace) {
+    const listenedNamespaces = globalThis.DEBUG.split(",").map((s) => {
+      return s.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
+    });
+    const isListened = listenedNamespaces.some((listenedNamespace) => {
+      if (listenedNamespace === "" || listenedNamespace[0] === "-") return false;
+      return namespace.match(RegExp(listenedNamespace.split("*").join(".*") + "$"));
+    });
+    const isExcluded = listenedNamespaces.some((listenedNamespace) => {
+      if (listenedNamespace === "" || listenedNamespace[0] !== "-") return false;
+      return namespace.match(RegExp(listenedNamespace.slice(1).split("*").join(".*") + "$"));
+    });
+    return isListened && !isExcluded;
+  },
+  log: (...args) => {
+    const [namespace, format, ...rest] = args;
+    const logWithFormatting = console.warn ?? console.log;
+    logWithFormatting(`${namespace} ${format}`, ...rest);
+  },
+  formatters: {}
+  // not implemented
+};
+function debugCreate(namespace) {
+  const instanceProps = {
+    color: COLORS[lastColor++ % COLORS.length],
+    enabled: topProps.enabled(namespace),
+    namespace,
+    log: topProps.log,
+    extend: () => {
+    }
+    // not implemented
+  };
+  const debugCall = (...args) => {
+    const { enabled, namespace: namespace2, color, log } = instanceProps;
+    if (args.length !== 0) {
+      argsHistory.push([namespace2, ...args]);
+    }
+    if (argsHistory.length > MAX_ARGS_HISTORY) {
+      argsHistory.shift();
+    }
+    if (topProps.enabled(namespace2) || enabled) {
+      const stringArgs = args.map((arg) => {
+        if (typeof arg === "string") {
+          return arg;
+        }
+        return safeStringify(arg);
+      });
+      const ms = `+${Date.now() - lastTimestamp}ms`;
+      lastTimestamp = Date.now();
+      if (globalThis.DEBUG_COLORS) {
+        log(colors_exports[color](bold(namespace2)), ...stringArgs, colors_exports[color](ms));
+      } else {
+        log(namespace2, ...stringArgs, ms);
+      }
+    }
+  };
+  return new Proxy(debugCall, {
+    get: (_, prop) => instanceProps[prop],
+    set: (_, prop, value) => instanceProps[prop] = value
+  });
+}
+var Debug = new Proxy(debugCreate, {
+  get: (_, prop) => topProps[prop],
+  set: (_, prop, value) => topProps[prop] = value
+});
+function safeStringify(value, indent = 2) {
+  const cache = /* @__PURE__ */ new Set();
+  return JSON.stringify(
+    value,
+    (key, value2) => {
+      if (typeof value2 === "object" && value2 !== null) {
+        if (cache.has(value2)) {
+          return `[Circular *]`;
+        }
+        cache.add(value2);
+      } else if (typeof value2 === "bigint") {
+        return value2.toString();
+      }
+      return value2;
+    },
+    indent
+  );
+}
+
+// node_modules/@prisma/driver-adapter-utils/dist/index.mjs
+var DriverAdapterError = class extends Error {
+  name = "DriverAdapterError";
+  cause;
+  constructor(payload) {
+    super(typeof payload["message"] === "string" ? payload["message"] : payload.kind);
+    this.cause = payload;
+  }
+};
+var debug = Debug("driver-adapter-utils");
+var ColumnTypeEnum = {
+  // Scalars
+  Int32: 0,
+  Int64: 1,
+  Float: 2,
+  Double: 3,
+  Numeric: 4,
+  Boolean: 5,
+  Character: 6,
+  Text: 7,
+  Date: 8,
+  Time: 9,
+  DateTime: 10,
+  Json: 11,
+  Enum: 12,
+  Bytes: 13,
+  Set: 14,
+  Uuid: 15,
+  // Arrays
+  Int32Array: 64,
+  Int64Array: 65,
+  FloatArray: 66,
+  DoubleArray: 67,
+  NumericArray: 68,
+  BooleanArray: 69,
+  CharacterArray: 70,
+  TextArray: 71,
+  DateArray: 72,
+  TimeArray: 73,
+  DateTimeArray: 74,
+  JsonArray: 75,
+  EnumArray: 76,
+  BytesArray: 77,
+  UuidArray: 78,
+  // Custom
+  UnknownNumber: 128
+};
+var mockAdapterErrors = {
+  queryRaw: new Error("Not implemented: queryRaw"),
+  executeRaw: new Error("Not implemented: executeRaw"),
+  startTransaction: new Error("Not implemented: startTransaction"),
+  executeScript: new Error("Not implemented: executeScript"),
+  dispose: new Error("Not implemented: dispose")
+};
+
+// node_modules/@prisma/adapter-pg/dist/index.mjs
+var import_postgres_array = __toESM(require_postgres_array2(), 1);
+var name = "@prisma/adapter-pg";
+var FIRST_NORMAL_OBJECT_ID = 16384;
+var { types: types2 } = esm_default;
+var { builtins: ScalarColumnType, getTypeParser } = types2;
+var AdditionalScalarColumnType = {
+  NAME: 19
+};
+var ArrayColumnType = {
+  BIT_ARRAY: 1561,
+  BOOL_ARRAY: 1e3,
+  BYTEA_ARRAY: 1001,
+  BPCHAR_ARRAY: 1014,
+  CHAR_ARRAY: 1002,
+  CIDR_ARRAY: 651,
+  DATE_ARRAY: 1182,
+  FLOAT4_ARRAY: 1021,
+  FLOAT8_ARRAY: 1022,
+  INET_ARRAY: 1041,
+  INT2_ARRAY: 1005,
+  INT4_ARRAY: 1007,
+  INT8_ARRAY: 1016,
+  JSONB_ARRAY: 3807,
+  JSON_ARRAY: 199,
+  MONEY_ARRAY: 791,
+  NUMERIC_ARRAY: 1231,
+  OID_ARRAY: 1028,
+  TEXT_ARRAY: 1009,
+  TIMESTAMP_ARRAY: 1115,
+  TIMESTAMPTZ_ARRAY: 1185,
+  TIME_ARRAY: 1183,
+  UUID_ARRAY: 2951,
+  VARBIT_ARRAY: 1563,
+  VARCHAR_ARRAY: 1015,
+  XML_ARRAY: 143
+};
+var UnsupportedNativeDataType = class _UnsupportedNativeDataType extends Error {
+  // map of type codes to type names
+  static typeNames = {
+    16: "bool",
+    17: "bytea",
+    18: "char",
+    19: "name",
+    20: "int8",
+    21: "int2",
+    22: "int2vector",
+    23: "int4",
+    24: "regproc",
+    25: "text",
+    26: "oid",
+    27: "tid",
+    28: "xid",
+    29: "cid",
+    30: "oidvector",
+    32: "pg_ddl_command",
+    71: "pg_type",
+    75: "pg_attribute",
+    81: "pg_proc",
+    83: "pg_class",
+    114: "json",
+    142: "xml",
+    194: "pg_node_tree",
+    269: "table_am_handler",
+    325: "index_am_handler",
+    600: "point",
+    601: "lseg",
+    602: "path",
+    603: "box",
+    604: "polygon",
+    628: "line",
+    650: "cidr",
+    700: "float4",
+    701: "float8",
+    705: "unknown",
+    718: "circle",
+    774: "macaddr8",
+    790: "money",
+    829: "macaddr",
+    869: "inet",
+    1033: "aclitem",
+    1042: "bpchar",
+    1043: "varchar",
+    1082: "date",
+    1083: "time",
+    1114: "timestamp",
+    1184: "timestamptz",
+    1186: "interval",
+    1266: "timetz",
+    1560: "bit",
+    1562: "varbit",
+    1700: "numeric",
+    1790: "refcursor",
+    2202: "regprocedure",
+    2203: "regoper",
+    2204: "regoperator",
+    2205: "regclass",
+    2206: "regtype",
+    2249: "record",
+    2275: "cstring",
+    2276: "any",
+    2277: "anyarray",
+    2278: "void",
+    2279: "trigger",
+    2280: "language_handler",
+    2281: "internal",
+    2283: "anyelement",
+    2287: "_record",
+    2776: "anynonarray",
+    2950: "uuid",
+    2970: "txid_snapshot",
+    3115: "fdw_handler",
+    3220: "pg_lsn",
+    3310: "tsm_handler",
+    3361: "pg_ndistinct",
+    3402: "pg_dependencies",
+    3500: "anyenum",
+    3614: "tsvector",
+    3615: "tsquery",
+    3642: "gtsvector",
+    3734: "regconfig",
+    3769: "regdictionary",
+    3802: "jsonb",
+    3831: "anyrange",
+    3838: "event_trigger",
+    3904: "int4range",
+    3906: "numrange",
+    3908: "tsrange",
+    3910: "tstzrange",
+    3912: "daterange",
+    3926: "int8range",
+    4072: "jsonpath",
+    4089: "regnamespace",
+    4096: "regrole",
+    4191: "regcollation",
+    4451: "int4multirange",
+    4532: "nummultirange",
+    4533: "tsmultirange",
+    4534: "tstzmultirange",
+    4535: "datemultirange",
+    4536: "int8multirange",
+    4537: "anymultirange",
+    4538: "anycompatiblemultirange",
+    4600: "pg_brin_bloom_summary",
+    4601: "pg_brin_minmax_multi_summary",
+    5017: "pg_mcv_list",
+    5038: "pg_snapshot",
+    5069: "xid8",
+    5077: "anycompatible",
+    5078: "anycompatiblearray",
+    5079: "anycompatiblenonarray",
+    5080: "anycompatiblerange"
+  };
+  type;
+  constructor(code) {
+    super();
+    this.type = _UnsupportedNativeDataType.typeNames[code] || "Unknown";
+    this.message = `Unsupported column type ${this.type}`;
+  }
+};
+function fieldToColumnType(fieldTypeId) {
+  switch (fieldTypeId) {
+    case ScalarColumnType.INT2:
+    case ScalarColumnType.INT4:
+      return ColumnTypeEnum.Int32;
+    case ScalarColumnType.INT8:
+      return ColumnTypeEnum.Int64;
+    case ScalarColumnType.FLOAT4:
+      return ColumnTypeEnum.Float;
+    case ScalarColumnType.FLOAT8:
+      return ColumnTypeEnum.Double;
+    case ScalarColumnType.BOOL:
+      return ColumnTypeEnum.Boolean;
+    case ScalarColumnType.DATE:
+      return ColumnTypeEnum.Date;
+    case ScalarColumnType.TIME:
+    case ScalarColumnType.TIMETZ:
+      return ColumnTypeEnum.Time;
+    case ScalarColumnType.TIMESTAMP:
+    case ScalarColumnType.TIMESTAMPTZ:
+      return ColumnTypeEnum.DateTime;
+    case ScalarColumnType.NUMERIC:
+    case ScalarColumnType.MONEY:
+      return ColumnTypeEnum.Numeric;
+    case ScalarColumnType.JSON:
+    case ScalarColumnType.JSONB:
+      return ColumnTypeEnum.Json;
+    case ScalarColumnType.UUID:
+      return ColumnTypeEnum.Uuid;
+    case ScalarColumnType.OID:
+      return ColumnTypeEnum.Int64;
+    case ScalarColumnType.BPCHAR:
+    case ScalarColumnType.TEXT:
+    case ScalarColumnType.VARCHAR:
+    case ScalarColumnType.BIT:
+    case ScalarColumnType.VARBIT:
+    case ScalarColumnType.INET:
+    case ScalarColumnType.CIDR:
+    case ScalarColumnType.XML:
+    case AdditionalScalarColumnType.NAME:
+      return ColumnTypeEnum.Text;
+    case ScalarColumnType.BYTEA:
+      return ColumnTypeEnum.Bytes;
+    case ArrayColumnType.INT2_ARRAY:
+    case ArrayColumnType.INT4_ARRAY:
+      return ColumnTypeEnum.Int32Array;
+    case ArrayColumnType.FLOAT4_ARRAY:
+      return ColumnTypeEnum.FloatArray;
+    case ArrayColumnType.FLOAT8_ARRAY:
+      return ColumnTypeEnum.DoubleArray;
+    case ArrayColumnType.NUMERIC_ARRAY:
+    case ArrayColumnType.MONEY_ARRAY:
+      return ColumnTypeEnum.NumericArray;
+    case ArrayColumnType.BOOL_ARRAY:
+      return ColumnTypeEnum.BooleanArray;
+    case ArrayColumnType.CHAR_ARRAY:
+      return ColumnTypeEnum.CharacterArray;
+    case ArrayColumnType.BPCHAR_ARRAY:
+    case ArrayColumnType.TEXT_ARRAY:
+    case ArrayColumnType.VARCHAR_ARRAY:
+    case ArrayColumnType.VARBIT_ARRAY:
+    case ArrayColumnType.BIT_ARRAY:
+    case ArrayColumnType.INET_ARRAY:
+    case ArrayColumnType.CIDR_ARRAY:
+    case ArrayColumnType.XML_ARRAY:
+      return ColumnTypeEnum.TextArray;
+    case ArrayColumnType.DATE_ARRAY:
+      return ColumnTypeEnum.DateArray;
+    case ArrayColumnType.TIME_ARRAY:
+      return ColumnTypeEnum.TimeArray;
+    case ArrayColumnType.TIMESTAMP_ARRAY:
+      return ColumnTypeEnum.DateTimeArray;
+    case ArrayColumnType.TIMESTAMPTZ_ARRAY:
+      return ColumnTypeEnum.DateTimeArray;
+    case ArrayColumnType.JSON_ARRAY:
+    case ArrayColumnType.JSONB_ARRAY:
+      return ColumnTypeEnum.JsonArray;
+    case ArrayColumnType.BYTEA_ARRAY:
+      return ColumnTypeEnum.BytesArray;
+    case ArrayColumnType.UUID_ARRAY:
+      return ColumnTypeEnum.UuidArray;
+    case ArrayColumnType.INT8_ARRAY:
+    case ArrayColumnType.OID_ARRAY:
+      return ColumnTypeEnum.Int64Array;
+    default:
+      if (fieldTypeId >= FIRST_NORMAL_OBJECT_ID) {
+        return ColumnTypeEnum.Text;
+      }
+      throw new UnsupportedNativeDataType(fieldTypeId);
+  }
+}
+function normalize_array(element_normalizer) {
+  return (str) => (0, import_postgres_array.parse)(str, element_normalizer);
+}
+function normalize_numeric(numeric) {
+  return numeric;
+}
+function normalize_date(date5) {
+  return date5;
+}
+function normalize_timestamp(time3) {
+  return `${time3.replace(" ", "T")}+00:00`;
+}
+function normalize_timestamptz(time3) {
+  return time3.replace(" ", "T").replace(/[+-]\d{2}(:\d{2})?$/, "+00:00");
+}
+function normalize_time(time3) {
+  return time3;
+}
+function normalize_timez(time3) {
+  return time3.replace(/[+-]\d{2}(:\d{2})?$/, "");
+}
+function normalize_money(money) {
+  return money.slice(1);
+}
+function normalize_xml(xml) {
+  return xml;
+}
+function toJson(json2) {
+  return json2;
+}
+function encodeBuffer(buffer) {
+  return Array.from(new Uint8Array(buffer));
+}
+var parsePgBytes = getTypeParser(ScalarColumnType.BYTEA);
+var parseBytesArray = getTypeParser(ArrayColumnType.BYTEA_ARRAY);
+function normalizeByteaArray(serializedBytesArray) {
+  const buffers = parseBytesArray(serializedBytesArray);
+  return buffers.map((buf) => buf ? encodeBuffer(buf) : null);
+}
+function convertBytes(serializedBytes) {
+  const buffer = parsePgBytes(serializedBytes);
+  return encodeBuffer(buffer);
+}
+function normalizeBit(bit) {
+  return bit;
+}
+var customParsers = {
+  [ScalarColumnType.NUMERIC]: normalize_numeric,
+  [ArrayColumnType.NUMERIC_ARRAY]: normalize_array(normalize_numeric),
+  [ScalarColumnType.TIME]: normalize_time,
+  [ArrayColumnType.TIME_ARRAY]: normalize_array(normalize_time),
+  [ScalarColumnType.TIMETZ]: normalize_timez,
+  [ScalarColumnType.DATE]: normalize_date,
+  [ArrayColumnType.DATE_ARRAY]: normalize_array(normalize_date),
+  [ScalarColumnType.TIMESTAMP]: normalize_timestamp,
+  [ArrayColumnType.TIMESTAMP_ARRAY]: normalize_array(normalize_timestamp),
+  [ScalarColumnType.TIMESTAMPTZ]: normalize_timestamptz,
+  [ArrayColumnType.TIMESTAMPTZ_ARRAY]: normalize_array(normalize_timestamptz),
+  [ScalarColumnType.MONEY]: normalize_money,
+  [ArrayColumnType.MONEY_ARRAY]: normalize_array(normalize_money),
+  [ScalarColumnType.JSON]: toJson,
+  [ArrayColumnType.JSON_ARRAY]: normalize_array(toJson),
+  [ScalarColumnType.JSONB]: toJson,
+  [ArrayColumnType.JSONB_ARRAY]: normalize_array(toJson),
+  [ScalarColumnType.BYTEA]: convertBytes,
+  [ArrayColumnType.BYTEA_ARRAY]: normalizeByteaArray,
+  [ArrayColumnType.BIT_ARRAY]: normalize_array(normalizeBit),
+  [ArrayColumnType.VARBIT_ARRAY]: normalize_array(normalizeBit),
+  [ArrayColumnType.XML_ARRAY]: normalize_array(normalize_xml)
+};
+function mapArg(arg, argType) {
+  if (arg === null) {
+    return null;
+  }
+  if (Array.isArray(arg) && argType.arity === "list") {
+    return arg.map((value) => mapArg(value, argType));
+  }
+  if (typeof arg === "string" && argType.scalarType === "datetime") {
+    arg = new Date(arg);
+  }
+  if (arg instanceof Date) {
+    switch (argType.dbType) {
+      case "TIME":
+      case "TIMETZ":
+        return formatTime(arg);
+      case "DATE":
+        return formatDate(arg);
+      default:
+        return formatDateTime(arg);
+    }
+  }
+  if (typeof arg === "string" && argType.scalarType === "bytes") {
+    return Buffer.from(arg, "base64");
+  }
+  if (Array.isArray(arg) && argType.scalarType === "bytes") {
+    return Buffer.from(arg);
+  }
+  if (ArrayBuffer.isView(arg)) {
+    return Buffer.from(arg.buffer, arg.byteOffset, arg.byteLength);
+  }
+  return arg;
+}
+function formatDateTime(date5) {
+  const pad = (n, z = 2) => String(n).padStart(z, "0");
+  const ms = date5.getUTCMilliseconds();
+  return pad(date5.getUTCFullYear(), 4) + "-" + pad(date5.getUTCMonth() + 1) + "-" + pad(date5.getUTCDate()) + " " + pad(date5.getUTCHours()) + ":" + pad(date5.getUTCMinutes()) + ":" + pad(date5.getUTCSeconds()) + (ms ? "." + String(ms).padStart(3, "0") : "");
+}
+function formatDate(date5) {
+  const pad = (n, z = 2) => String(n).padStart(z, "0");
+  return pad(date5.getUTCFullYear(), 4) + "-" + pad(date5.getUTCMonth() + 1) + "-" + pad(date5.getUTCDate());
+}
+function formatTime(date5) {
+  const pad = (n, z = 2) => String(n).padStart(z, "0");
+  const ms = date5.getUTCMilliseconds();
+  return pad(date5.getUTCHours()) + ":" + pad(date5.getUTCMinutes()) + ":" + pad(date5.getUTCSeconds()) + (ms ? "." + String(ms).padStart(3, "0") : "");
+}
+var TLS_ERRORS = /* @__PURE__ */ new Set([
+  "UNABLE_TO_GET_ISSUER_CERT",
+  "UNABLE_TO_GET_CRL",
+  "UNABLE_TO_DECRYPT_CERT_SIGNATURE",
+  "UNABLE_TO_DECRYPT_CRL_SIGNATURE",
+  "UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY",
+  "CERT_SIGNATURE_FAILURE",
+  "CRL_SIGNATURE_FAILURE",
+  "CERT_NOT_YET_VALID",
+  "CERT_HAS_EXPIRED",
+  "CRL_NOT_YET_VALID",
+  "CRL_HAS_EXPIRED",
+  "ERROR_IN_CERT_NOT_BEFORE_FIELD",
+  "ERROR_IN_CERT_NOT_AFTER_FIELD",
+  "ERROR_IN_CRL_LAST_UPDATE_FIELD",
+  "ERROR_IN_CRL_NEXT_UPDATE_FIELD",
+  "DEPTH_ZERO_SELF_SIGNED_CERT",
+  "SELF_SIGNED_CERT_IN_CHAIN",
+  "UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+  "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+  "CERT_CHAIN_TOO_LONG",
+  "CERT_REVOKED",
+  "INVALID_CA",
+  "INVALID_PURPOSE",
+  "CERT_UNTRUSTED",
+  "CERT_REJECTED",
+  "HOSTNAME_MISMATCH",
+  "ERR_TLS_CERT_ALTNAME_FORMAT",
+  "ERR_TLS_CERT_ALTNAME_INVALID"
+]);
+var SOCKET_ERRORS = /* @__PURE__ */ new Set(["ENOTFOUND", "ECONNREFUSED", "ECONNRESET", "ETIMEDOUT"]);
+function convertDriverError(error46) {
+  if (isSocketError(error46)) {
+    return mapSocketError(error46);
+  }
+  if (isTlsError(error46)) {
+    return {
+      kind: "TlsConnectionError",
+      reason: error46.message
+    };
+  }
+  if (isDriverError(error46)) {
+    return {
+      originalCode: error46.code,
+      originalMessage: error46.message,
+      ...mapDriverError(error46)
+    };
+  }
+  throw error46;
+}
+function mapDriverError(error46) {
+  switch (error46.code) {
+    case "22001":
+      return {
+        kind: "LengthMismatch",
+        column: error46.column
+      };
+    case "22003":
+      return {
+        kind: "ValueOutOfRange",
+        cause: error46.message
+      };
+    case "23505": {
+      const fields = error46.detail?.match(/Key \(([^)]+)\)/)?.at(1)?.split(", ");
+      return {
+        kind: "UniqueConstraintViolation",
+        constraint: fields !== void 0 ? { fields } : void 0
+      };
+    }
+    case "23502": {
+      const fields = error46.detail?.match(/Key \(([^)]+)\)/)?.at(1)?.split(", ");
+      return {
+        kind: "NullConstraintViolation",
+        constraint: fields !== void 0 ? { fields } : void 0
+      };
+    }
+    case "23503": {
+      let constraint;
+      if (error46.column) {
+        constraint = { fields: [error46.column] };
+      } else if (error46.constraint) {
+        constraint = { index: error46.constraint };
+      }
+      return {
+        kind: "ForeignKeyConstraintViolation",
+        constraint
+      };
+    }
+    case "3D000":
+      return {
+        kind: "DatabaseDoesNotExist",
+        db: error46.message.split(" ").at(1)?.split('"').at(1)
+      };
+    case "28000":
+      return {
+        kind: "DatabaseAccessDenied",
+        db: error46.message.split(",").find((s) => s.startsWith(" database"))?.split('"').at(1)
+      };
+    case "28P01":
+      return {
+        kind: "AuthenticationFailed",
+        user: error46.message.split(" ").pop()?.split('"').at(1)
+      };
+    case "40001":
+      return {
+        kind: "TransactionWriteConflict"
+      };
+    case "42P01":
+      return {
+        kind: "TableDoesNotExist",
+        table: error46.message.split(" ").at(1)?.split('"').at(1)
+      };
+    case "42703":
+      return {
+        kind: "ColumnNotFound",
+        column: error46.message.split(" ").at(1)?.split('"').at(1)
+      };
+    case "42P04":
+      return {
+        kind: "DatabaseAlreadyExists",
+        db: error46.message.split(" ").at(1)?.split('"').at(1)
+      };
+    case "53300":
+      return {
+        kind: "TooManyConnections",
+        cause: error46.message
+      };
+    default:
+      return {
+        kind: "postgres",
+        code: error46.code ?? "N/A",
+        severity: error46.severity ?? "N/A",
+        message: error46.message,
+        detail: error46.detail,
+        column: error46.column,
+        hint: error46.hint
+      };
+  }
+}
+function isDriverError(error46) {
+  return typeof error46.code === "string" && typeof error46.message === "string" && typeof error46.severity === "string" && (typeof error46.detail === "string" || error46.detail === void 0) && (typeof error46.column === "string" || error46.column === void 0) && (typeof error46.hint === "string" || error46.hint === void 0);
+}
+function mapSocketError(error46) {
+  switch (error46.code) {
+    case "ENOTFOUND":
+    case "ECONNREFUSED":
+      return {
+        kind: "DatabaseNotReachable",
+        host: error46.address ?? error46.hostname,
+        port: error46.port
+      };
+    case "ECONNRESET":
+      return {
+        kind: "ConnectionClosed"
+      };
+    case "ETIMEDOUT":
+      return {
+        kind: "SocketTimeout"
+      };
+  }
+}
+function isSocketError(error46) {
+  return typeof error46.code === "string" && typeof error46.syscall === "string" && typeof error46.errno === "number" && SOCKET_ERRORS.has(error46.code);
+}
+function isTlsError(error46) {
+  if (typeof error46.code === "string") {
+    return TLS_ERRORS.has(error46.code);
+  }
+  switch (error46.message) {
+    case "The server does not support SSL connections":
+    case "There was an error establishing an SSL connection":
+      return true;
+  }
+  return false;
+}
+var types22 = esm_default.types;
+var debug2 = Debug("prisma:driver-adapter:pg");
+var PgQueryable = class {
+  constructor(client, pgOptions) {
+    this.client = client;
+    this.pgOptions = pgOptions;
+  }
+  provider = "postgres";
+  adapterName = name;
+  /**
+   * Execute a query given as SQL, interpolating the given parameters.
+   */
+  async queryRaw(query) {
+    const tag = "[js::query_raw]";
+    debug2(`${tag} %O`, query);
+    const { fields, rows } = await this.performIO(query);
+    const columnNames = fields.map((field) => field.name);
+    let columnTypes = [];
+    try {
+      columnTypes = fields.map((field) => fieldToColumnType(field.dataTypeID));
+    } catch (e) {
+      if (e instanceof UnsupportedNativeDataType) {
+        throw new DriverAdapterError({
+          kind: "UnsupportedNativeDataType",
+          type: e.type
+        });
+      }
+      throw e;
+    }
+    const udtParser = this.pgOptions?.userDefinedTypeParser;
+    if (udtParser) {
+      for (let i = 0; i < fields.length; i++) {
+        const field = fields[i];
+        if (field.dataTypeID >= FIRST_NORMAL_OBJECT_ID && !Object.hasOwn(customParsers, field.dataTypeID)) {
+          for (let j = 0; j < rows.length; j++) {
+            rows[j][i] = await udtParser(field.dataTypeID, rows[j][i], this);
+          }
+        }
+      }
+    }
+    return {
+      columnNames,
+      columnTypes,
+      rows
+    };
+  }
+  /**
+   * Execute a query given as SQL, interpolating the given parameters and
+   * returning the number of affected rows.
+   * Note: Queryable expects a u64, but napi.rs only supports u32.
+   */
+  async executeRaw(query) {
+    const tag = "[js::execute_raw]";
+    debug2(`${tag} %O`, query);
+    return (await this.performIO(query)).rowCount ?? 0;
+  }
+  /**
+   * Run a query against the database, returning the result set.
+   * Should the query fail due to a connection error, the connection is
+   * marked as unhealthy.
+   */
+  async performIO(query) {
+    const { sql, args } = query;
+    const values = args.map((arg, i) => mapArg(arg, query.argTypes[i]));
+    try {
+      const result = await this.client.query(
+        {
+          text: sql,
+          values,
+          rowMode: "array",
+          types: {
+            // This is the error expected:
+            // No overload matches this call.
+            // The last overload gave the following error.
+            // Type '(oid: number, format?: any) => (json: string) => unknown' is not assignable to type '{ <T>(oid: number): TypeParser<string, string | T>; <T>(oid: number, format: "text"): TypeParser<string, string | T>; <T>(oid: number, format: "binary"): TypeParser<...>; }'.
+            //   Type '(json: string) => unknown' is not assignable to type 'TypeParser<Buffer, any>'.
+            //     Types of parameters 'json' and 'value' are incompatible.
+            //       Type 'Buffer' is not assignable to type 'string'.ts(2769)
+            //
+            // Because pg-types types expect us to handle both binary and text protocol versions,
+            // where as far we can see, pg will ever pass only text version.
+            //
+            // @ts-expect-error
+            getTypeParser: (oid, format) => {
+              if (format === "text" && customParsers[oid]) {
+                return customParsers[oid];
+              }
+              return types22.getTypeParser(oid, format);
+            }
+          }
+        },
+        values
+      );
+      return result;
+    } catch (e) {
+      this.onError(e);
+    }
+  }
+  onError(error46) {
+    debug2("Error in performIO: %O", error46);
+    throw new DriverAdapterError(convertDriverError(error46));
+  }
+};
+var PgTransaction = class extends PgQueryable {
+  constructor(client, options, pgOptions, cleanup) {
+    super(client, pgOptions);
+    this.options = options;
+    this.pgOptions = pgOptions;
+    this.cleanup = cleanup;
+  }
+  async commit() {
+    debug2(`[js::commit]`);
+    this.cleanup?.();
+    this.client.release();
+  }
+  async rollback() {
+    debug2(`[js::rollback]`);
+    this.cleanup?.();
+    this.client.release();
+  }
+};
+var PrismaPgAdapter = class extends PgQueryable {
+  constructor(client, pgOptions, release) {
+    super(client);
+    this.pgOptions = pgOptions;
+    this.release = release;
+  }
+  async startTransaction(isolationLevel) {
+    const options = {
+      usePhantomQuery: false
+    };
+    const tag = "[js::startTransaction]";
+    debug2("%s options: %O", tag, options);
+    const conn = await this.client.connect().catch((error46) => this.onError(error46));
+    const onError = (err) => {
+      debug2(`Error from pool connection: ${err.message} %O`, err);
+      this.pgOptions?.onConnectionError?.(err);
+    };
+    conn.on("error", onError);
+    const cleanup = () => {
+      conn.removeListener("error", onError);
+    };
+    try {
+      const tx = new PgTransaction(conn, options, this.pgOptions, cleanup);
+      await tx.executeRaw({ sql: "BEGIN", args: [], argTypes: [] });
+      if (isolationLevel) {
+        await tx.executeRaw({
+          sql: `SET TRANSACTION ISOLATION LEVEL ${isolationLevel}`,
+          args: [],
+          argTypes: []
+        });
+      }
+      return tx;
+    } catch (error46) {
+      cleanup();
+      conn.release(error46);
+      this.onError(error46);
+    }
+  }
+  async executeScript(script) {
+    const statements = script.split(";").map((stmt) => stmt.trim()).filter((stmt) => stmt.length > 0);
+    for (const stmt of statements) {
+      try {
+        await this.client.query(stmt);
+      } catch (error46) {
+        this.onError(error46);
+      }
+    }
+  }
+  getConnectionInfo() {
+    return {
+      schemaName: this.pgOptions?.schema,
+      supportsRelationJoins: true
+    };
+  }
+  async dispose() {
+    return this.release?.();
+  }
+  underlyingDriver() {
+    return this.client;
+  }
+};
+var PrismaPgAdapterFactory = class {
+  constructor(poolOrConfig, options) {
+    this.options = options;
+    if (poolOrConfig instanceof esm_default.Pool) {
+      this.externalPool = poolOrConfig;
+      this.config = poolOrConfig.options;
+    } else {
+      this.externalPool = null;
+      this.config = poolOrConfig;
+    }
+  }
+  provider = "postgres";
+  adapterName = name;
+  config;
+  externalPool;
+  async connect() {
+    const client = this.externalPool ?? new esm_default.Pool(this.config);
+    const onIdleClientError = (err) => {
+      debug2(`Error from idle pool client: ${err.message} %O`, err);
+      this.options?.onPoolError?.(err);
+    };
+    client.on("error", onIdleClientError);
+    return new PrismaPgAdapter(client, this.options, async () => {
+      if (this.externalPool) {
+        if (this.options?.disposeExternalPool) {
+          await this.externalPool.end();
+          this.externalPool = null;
+        } else {
+          this.externalPool.removeListener("error", onIdleClientError);
+        }
+      } else {
+        await client.end();
+      }
+    });
+  }
+  async connectToShadowDb() {
+    const conn = await this.connect();
+    const database = `prisma_migrate_shadow_db_${globalThis.crypto.randomUUID()}`;
+    await conn.executeScript(`CREATE DATABASE "${database}"`);
+    const client = new esm_default.Pool({ ...this.config, database });
+    return new PrismaPgAdapter(client, void 0, async () => {
+      await conn.executeScript(`DROP DATABASE "${database}"`);
+      await client.end();
+    });
+  }
+};
+
+// src/client.ts
+var globalForPrisma = global;
+var createPrismaClient = (connectionString, logLevel, poolConfig) => {
+  const dbUrl = connectionString || process.env.DATABASE_URL;
+  if (!dbUrl) {
+    throw new Error("DATABASE_URL or connectionString must be provided");
+  }
+  const pool = new Pool({
+    connectionString: dbUrl,
+    ...poolConfig
+  });
+  const adapter = new PrismaPgAdapterFactory(pool);
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const log = logLevel ?? (isDevelopment ? "query" : "error");
+  return new import_client3.PrismaClient({
+    adapter,
+    log: [log]
+  });
+};
+var prisma = globalForPrisma.prisma || createPrismaClient();
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+
+// src/modules/classes/repositories/implementations/prisma-class-instance.repository.ts
+var PrismaClassInstanceRepository = class {
+  async findById(id) {
+    const instance = await prisma.classInstance.findUnique({
+      where: { id },
+      include: classInstanceIncludeDefinition
+    });
+    return instance;
+  }
+  async findMany(where) {
+    const instances = await prisma.classInstance.findMany({
+      where,
+      include: classInstanceIncludeDefinition,
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+    return instances;
+  }
+};
+
+// src/modules/classes/repositories/implementations/prisma-user.repository.ts
+var PrismaUserRepository = class {
+  async findByEmail(email3) {
+    return await prisma.user.findUnique({
+      where: { email: email3 }
+    });
+  }
+};
+
+// src/modules/classes/repositories/implementations/prisma-booking.repository.ts
+var import_client6 = require("@prisma/client");
+var PrismaBookingRepository = class {
+  async findByUserAndClass(userId, classInstanceId) {
+    return await prisma.booking.findUnique({
+      where: {
+        userId_classInstanceId: {
+          userId,
+          classInstanceId
+        }
+      }
+    });
+  }
+  async createWithTransaction(params) {
+    return await prisma.$transaction(async (tx) => {
+      const existingBooking = await tx.booking.findFirst({
+        where: {
+          OR: [
+            { idempotencyKey: params.idempotencyKey },
+            {
+              user: {
+                email: params.email
+              },
+              classInstanceId: params.classInstanceId
+            }
+          ]
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          classInstance: {
+            include: classInstanceIncludeDefinition
+          }
+        }
+      });
+      if (existingBooking) {
+        return existingBooking;
+      }
+      const booking = await tx.booking.create({
+        data: {
+          userId: params.userId,
+          classInstanceId: params.classInstanceId,
+          idempotencyKey: params.idempotencyKey,
+          status: params.status || import_client6.BookingStatus.CONFIRMED
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          classInstance: {
+            include: classInstanceIncludeDefinition
+          }
+        }
+      });
+      await tx.classInstance.update({
+        where: { id: params.classInstanceId },
+        data: {
+          bookedCount: {
+            increment: 1
+          }
+        }
+      });
+      return booking;
+    });
+  }
+};
+
+// src/modules/classes/controllers/classes.controller.ts
+var applicationService = new ClassesApplicationService(
+  new PrismaClassInstanceRepository(),
+  new PrismaUserRepository(),
+  new PrismaBookingRepository()
+);
 var searchHandler = async (event) => {
   const queryParams = event.queryStringParameters || {};
   const normalizedParams = {
@@ -19861,7 +20079,7 @@ var searchHandler = async (event) => {
     throw (0, import_http_errors.default)(400, `Invalid query parameters: ${errorMessage}`);
   }
   const validatedParams = validationResult.data;
-  const result = await searchClasses(validatedParams.type);
+  const result = await applicationService.searchClasses(validatedParams.type);
   return {
     statusCode: 200,
     headers: {
@@ -19871,8 +20089,46 @@ var searchHandler = async (event) => {
   };
 };
 var search = core_default(searchHandler).use(http_error_handler_default());
+var bookHandler = async (event) => {
+  const headersValidation = BookClassHeadersSchema.safeParse(event.headers);
+  if (!headersValidation.success) {
+    const errorMessage = formatValidationErrors(headersValidation.error);
+    throw (0, import_http_errors.default)(400, `Invalid headers: ${errorMessage}`);
+  }
+  const { "idempotency-key": idempotencyKey } = headersValidation.data;
+  const bodyValidation = BookClassRequestBodySchema.safeParse(event.body || "");
+  if (!bodyValidation.success) {
+    const errorMessage = formatValidationErrors(bodyValidation.error);
+    throw (0, import_http_errors.default)(400, `Invalid request body: ${errorMessage}`);
+  }
+  const { email: email3, classInstanceId } = bodyValidation.data;
+  try {
+    const booking = await applicationService.bookClass({
+      email: email3,
+      classInstanceId,
+      idempotencyKey
+    });
+    return {
+      statusCode: 201,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(booking)
+    };
+  } catch (error46) {
+    if (error46 instanceof NotFoundError) {
+      throw (0, import_http_errors.default)(error46.statusCode, error46.message);
+    }
+    if (error46 instanceof ConflictError) {
+      throw (0, import_http_errors.default)(error46.statusCode, error46.message);
+    }
+    throw error46;
+  }
+};
+var book = core_default(bookHandler).use(http_error_handler_default());
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  book,
   search
 });
 /*! Bundled license information:

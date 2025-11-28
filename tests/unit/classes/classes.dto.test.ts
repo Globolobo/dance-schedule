@@ -1,10 +1,8 @@
 import { describe, it, expect } from "@jest/globals";
 import { DanceStyle, DanceLevel } from "@prisma/client";
-import {
-  DanceStyleFilterSchema,
-  SearchQueryParamsSchema,
-  ClassWithInstructorSchema,
-} from "../../../src/modules/classes/classes.dto";
+import { DanceStyleFilterSchema } from "../../../src/classes/dto/shared";
+import { SearchQueryParamsSchema } from "../../../src/classes/dto/search.dto";
+import { ClassDefinitionWithInstructorSchema } from "../../../src/classes/dto/repository.dto";
 
 describe("classes.dto", () => {
   describe("DanceStyleFilterSchema", () => {
@@ -43,7 +41,7 @@ describe("classes.dto", () => {
     });
   });
 
-  describe("ClassWithInstructorSchema", () => {
+  describe("ClassDefinitionWithInstructorSchema", () => {
     const validClassData = {
       id: "550e8400-e29b-41d4-a716-446655440000",
       title: "Test Class",
@@ -52,6 +50,7 @@ describe("classes.dto", () => {
       level: DanceLevel.LEVEL_1,
       maxSpots: 20,
       durationMin: 60,
+      instructorId: "660e8400-e29b-41d4-a716-446655440000",
       createdAt: new Date("2024-01-01T00:00:00.000Z"),
       updatedAt: new Date("2024-01-01T00:00:00.000Z"),
       instructor: {
@@ -62,7 +61,7 @@ describe("classes.dto", () => {
     };
 
     it("should validate valid class data", () => {
-      const result = ClassWithInstructorSchema.parse(validClassData);
+      const result = ClassDefinitionWithInstructorSchema.parse(validClassData);
       expect(result).toEqual(validClassData);
     });
 
@@ -71,7 +70,9 @@ describe("classes.dto", () => {
         ...validClassData,
         instructor: null,
       };
-      const result = ClassWithInstructorSchema.parse(classWithoutInstructor);
+      const result = ClassDefinitionWithInstructorSchema.parse(
+        classWithoutInstructor
+      );
       expect(result.instructor).toBeNull();
     });
 
@@ -80,19 +81,27 @@ describe("classes.dto", () => {
         ...validClassData,
         description: null,
       };
-      const result = ClassWithInstructorSchema.parse(classWithoutDescription);
+      const result = ClassDefinitionWithInstructorSchema.parse(
+        classWithoutDescription
+      );
       expect(result.description).toBeNull();
     });
 
     it("should reject missing required fields", () => {
       const { id, ...missingId } = validClassData;
-      expect(() => ClassWithInstructorSchema.parse(missingId)).toThrow();
+      expect(() =>
+        ClassDefinitionWithInstructorSchema.parse(missingId)
+      ).toThrow();
 
       const { title, ...missingTitle } = validClassData;
-      expect(() => ClassWithInstructorSchema.parse(missingTitle)).toThrow();
+      expect(() =>
+        ClassDefinitionWithInstructorSchema.parse(missingTitle)
+      ).toThrow();
 
       const { style, ...missingStyle } = validClassData;
-      expect(() => ClassWithInstructorSchema.parse(missingStyle)).toThrow();
+      expect(() =>
+        ClassDefinitionWithInstructorSchema.parse(missingStyle)
+      ).toThrow();
     });
 
     it("should reject invalid UUIDs", () => {
@@ -100,7 +109,9 @@ describe("classes.dto", () => {
         ...validClassData,
         id: "not-a-uuid",
       };
-      expect(() => ClassWithInstructorSchema.parse(invalidId)).toThrow();
+      expect(() =>
+        ClassDefinitionWithInstructorSchema.parse(invalidId)
+      ).toThrow();
     });
 
     it("should reject invalid email in instructor", () => {
@@ -112,7 +123,7 @@ describe("classes.dto", () => {
         },
       };
       expect(() =>
-        ClassWithInstructorSchema.parse(invalidInstructor)
+        ClassDefinitionWithInstructorSchema.parse(invalidInstructor)
       ).toThrow();
     });
 
@@ -121,7 +132,9 @@ describe("classes.dto", () => {
         ...validClassData,
         style: "INVALID_STYLE" as any,
       };
-      expect(() => ClassWithInstructorSchema.parse(invalidStyle)).toThrow();
+      expect(() =>
+        ClassDefinitionWithInstructorSchema.parse(invalidStyle)
+      ).toThrow();
     });
 
     it("should reject invalid dance level", () => {
@@ -129,7 +142,9 @@ describe("classes.dto", () => {
         ...validClassData,
         level: "INVALID_LEVEL" as any,
       };
-      expect(() => ClassWithInstructorSchema.parse(invalidLevel)).toThrow();
+      expect(() =>
+        ClassDefinitionWithInstructorSchema.parse(invalidLevel)
+      ).toThrow();
     });
 
     it("should reject non-integer maxSpots", () => {
@@ -137,7 +152,9 @@ describe("classes.dto", () => {
         ...validClassData,
         maxSpots: 20.5,
       };
-      expect(() => ClassWithInstructorSchema.parse(invalidMaxSpots)).toThrow();
+      expect(() =>
+        ClassDefinitionWithInstructorSchema.parse(invalidMaxSpots)
+      ).toThrow();
     });
 
     it("should reject non-integer durationMin", () => {
@@ -145,7 +162,9 @@ describe("classes.dto", () => {
         ...validClassData,
         durationMin: 60.5,
       };
-      expect(() => ClassWithInstructorSchema.parse(invalidDuration)).toThrow();
+      expect(() =>
+        ClassDefinitionWithInstructorSchema.parse(invalidDuration)
+      ).toThrow();
     });
   });
 });

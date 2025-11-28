@@ -2,9 +2,19 @@ import middy from "@middy/core";
 import httpErrorHandler from "@middy/http-error-handler";
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import createError from "http-errors";
-import { searchClasses } from "./classes.service";
-import { SearchQueryParamsSchema } from "./classes.dto";
+import { SearchQueryParamsSchema } from "../dto/search.dto";
 import { formatValidationErrors } from "../../utils/validation";
+import { ApplicationService } from "../application/service";
+import { PrismaClassInstanceRepository } from "../repositories/implementations/prisma-class-instance.repository";
+import { PrismaUserRepository } from "../repositories/implementations/prisma-user.repository";
+import { PrismaBookingRepository } from "../repositories/implementations/prisma-booking.repository";
+
+// Initialize application service with dependencies
+const applicationService = new ApplicationService(
+  new PrismaClassInstanceRepository(),
+  new PrismaUserRepository(),
+  new PrismaBookingRepository()
+);
 
 const searchHandler = async (
   event: APIGatewayProxyEvent
@@ -25,7 +35,7 @@ const searchHandler = async (
 
   const validatedParams = validationResult.data;
 
-  const result = await searchClasses(validatedParams.type);
+  const result = await applicationService.searchClasses(validatedParams.type);
 
   return {
     statusCode: 200,
