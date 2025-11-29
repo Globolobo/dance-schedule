@@ -1,11 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  jest,
-  beforeEach,
-  afterEach,
-} from "@jest/globals";
+import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { DanceStyle, DanceLevel } from "@prisma/client";
 import {
   createGETEvent,
@@ -17,10 +10,8 @@ import {
   ClassFullError,
   DuplicateBookingError,
 } from "../../../src/classes/domain/errors";
-import type { SearchResponse } from "../../../src/classes/dto/search.dto";
-import type { BookingWithRelations } from "../../../src/classes/dto/booking.dto";
-import type { BookClassParams } from "../../../src/classes/application/service";
-import type { DanceStyleFilter } from "../../../src/classes/dto/shared";
+
+import { mockSearchClasses, mockBookClass } from "../../mocks";
 
 // Mock the client to prevent database connections
 jest.mock("../../../src/client", () => ({
@@ -41,13 +32,6 @@ jest.mock("../../../src/client", () => ({
 }));
 
 // Mock the application service before importing the controller
-const mockSearchClasses = jest.fn() as jest.MockedFunction<
-  (typeFilter: DanceStyleFilter) => Promise<SearchResponse>
->;
-const mockBookClass = jest.fn() as jest.MockedFunction<
-  (params: BookClassParams) => Promise<BookingWithRelations>
->;
-
 jest.mock("../../../src/classes/application/service", () => {
   return {
     ApplicationService: jest.fn().mockImplementation(() => ({
@@ -68,29 +52,32 @@ describe("controller", () => {
 
   describe("searchHandler", () => {
     it("should return 200 with JSON body for valid query params", async () => {
+      const instanceId = crypto.randomUUID();
+      const definitionId = crypto.randomUUID();
+      const instructorId = crypto.randomUUID();
       const mockResult = {
         classes: [
           {
-            id: "instance-1",
-            definitionId: "class-1",
+            id: instanceId,
+            definitionId,
             startTime: new Date("2024-01-01T10:00:00Z"),
             endTime: new Date("2024-01-01T11:00:00Z"),
             bookedCount: 0,
             createdAt: new Date("2024-01-01"),
             updatedAt: new Date("2024-01-01"),
             definition: {
-              id: "class-1",
+              id: definitionId,
               title: "Salsa Class",
               description: "A salsa class",
               style: DanceStyle.SALSA,
               level: DanceLevel.LEVEL_1,
               maxSpots: 20,
               durationMin: 60,
-              instructorId: "instructor-1",
+              instructorId,
               createdAt: new Date("2024-01-01"),
               updatedAt: new Date("2024-01-01"),
               instructor: {
-                id: "instructor-1",
+                id: instructorId,
                 name: "John Doe",
                 email: "john@example.com",
               },
@@ -109,7 +96,7 @@ describe("controller", () => {
       expect(response.headers!["Content-Type"]).toBe("application/json");
       const parsedBody = JSON.parse(response.body);
       expect(parsedBody.classes).toHaveLength(1);
-      expect(parsedBody.classes[0].id).toBe("instance-1");
+      expect(parsedBody.classes[0].id).toBe(instanceId);
       expect(parsedBody.classes[0].definition.title).toBe("Salsa Class");
       expect(parsedBody.count).toBe(1);
       expect(mockSearchClasses).toHaveBeenCalledWith("salsa");

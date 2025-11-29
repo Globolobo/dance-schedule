@@ -1,5 +1,39 @@
 import { PrismaClient, DanceStyle, DanceLevel, UserRole } from "@prisma/client";
 
+export interface CreateTestUserParams {
+  email?: string;
+  name?: string;
+  role?: UserRole;
+}
+
+export async function createTestUser(
+  prisma: PrismaClient,
+  params: CreateTestUserParams = {}
+): Promise<{
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  createdAt: Date;
+  updatedAt: Date;
+}> {
+  const {
+    email = `user-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(7)}@test.com`,
+    name = "Test User",
+    role = UserRole.STUDENT,
+  } = params;
+
+  return await prisma.user.create({
+    data: {
+      email,
+      name,
+      role,
+    },
+  });
+}
+
 export interface CreateTestInstructorParams {
   email?: string;
   name?: string;

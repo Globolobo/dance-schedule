@@ -97,3 +97,17 @@ export function createGETEvent(
     queryStringParameters: queryParams || null,
   });
 }
+
+export function createPOSTEvent(
+  path: string,
+  body: Record<string, unknown>,
+  headers?: Record<string, string>
+): APIGatewayProxyEvent {
+  return createAPIGatewayEvent({
+    httpMethod: "POST",
+    path,
+    resource: path,
+    headers: headers || {},
+    body: JSON.stringify(body),
+  });
+}
