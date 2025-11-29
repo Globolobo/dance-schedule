@@ -1,5 +1,5 @@
 import type { Booking, BookingStatus } from "@prisma/client";
-import type { BookingWithRelations } from "../../dto/booking.dto";
+import type { BookingWithRelations } from "../dto/booking.dto";
 
 export interface CreateBookingParams {
   userId: string;
