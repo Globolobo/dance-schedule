@@ -40,6 +40,12 @@ functions:
       - httpApi:
           path: /classes/book
           method: post
+  getClassById:
+    handler: src/classes/index.getClassById
+    events:
+      - httpApi:
+          path: /classes/{id}
+          method: get
 
 plugins:
   - serverless-offline

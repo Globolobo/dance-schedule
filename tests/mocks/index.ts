@@ -168,15 +168,14 @@ export interface CreateMockBookingParams {
   updatedAt?: Date;
 }
 
-export function createMockBooking(
-  params: Partial<Booking> = {}
-): Booking {
+export function createMockBooking(params: Partial<Booking> = {}): Booking {
   return {
     id: params.id || crypto.randomUUID(),
     userId: params.userId || crypto.randomUUID(),
     classInstanceId: params.classInstanceId || crypto.randomUUID(),
     status: params.status || BookingStatus.CONFIRMED,
-    idempotencyKey: params.idempotencyKey || `idempotency-key-${crypto.randomUUID()}`,
+    idempotencyKey:
+      params.idempotencyKey || `idempotency-key-${crypto.randomUUID()}`,
     createdAt: params.createdAt || new Date("2024-01-01"),
     updatedAt: params.updatedAt || new Date("2024-01-01"),
   };
@@ -196,7 +195,8 @@ export function createMockBookingWithRelations(
     userId,
     classInstanceId,
     status: params.status || BookingStatus.CONFIRMED,
-    idempotencyKey: params.idempotencyKey || `idempotency-key-${crypto.randomUUID()}`,
+    idempotencyKey:
+      params.idempotencyKey || `idempotency-key-${crypto.randomUUID()}`,
     createdAt: params.createdAt || new Date("2024-01-01"),
     updatedAt: params.updatedAt || new Date("2024-01-01"),
     user: {
@@ -233,4 +233,3 @@ export function createMockBookingWithRelations(
     ...params,
   };
 }
-

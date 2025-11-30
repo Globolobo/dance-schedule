@@ -32,6 +32,8 @@ npx prisma migrate dev
 npm run seed
 ```
 
+**Note:** Make sure to complete the database setup (migrations and seeding) before running the application locally, as the app requires the database to be properly initialized.
+
 ### Run Locally
 
 ```bash
@@ -59,6 +61,20 @@ Navigate to these URLs in your browser:
 - Bachata classes: `http://localhost:3000/classes/search?type=bachata`
 - Reggaeton classes: `http://localhost:3000/classes/search?type=reggaeton`
 
+### Get Class by ID
+
+**GET** `/classes/{id}`
+
+Path parameter:
+
+- `id` (required): UUID of the class instance
+
+**Examples:**
+
+Navigate to these URLs in your browser:
+
+- Get class by ID: `http://localhost:3000/classes/<classUUID>` <- UUID can be obtained from the "search" endpoint
+
 ### Book a Class
 
 **POST** `/classes/book`
@@ -72,7 +88,7 @@ Navigate to these URLs in your browser:
 
 ```json
 {
-  "email": "student@example.com",
+  "email": "alpha@example.com",
   "classInstanceId": "<uuid>"
 }
 ```

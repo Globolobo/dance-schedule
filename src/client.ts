@@ -31,6 +31,21 @@ export const createPrismaClient = (
   });
 };
 
-export const prisma = globalForPrisma.prisma || createPrismaClient();
+// Use a getter to ensure we always get the current prisma client
+// This is important for tests where the client may be recreated
+const getPrisma = () => {
+  if (globalForPrisma.prisma) {
+    return globalForPrisma.prisma;
+  }
+  const client = createPrismaClient();
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = client;
+  }
+  return client;
+};
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    return getPrisma()[prop as keyof PrismaClient];
+  },
+});

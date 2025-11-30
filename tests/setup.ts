@@ -26,6 +26,7 @@ beforeAll(async () => {
 
   testPrisma = createPrismaClient(DATABASE_TEST_URL, "error");
 
+  globalForPrisma.prisma = testPrisma;
   (global as any).testPrisma = testPrisma;
 }, 30000);
 

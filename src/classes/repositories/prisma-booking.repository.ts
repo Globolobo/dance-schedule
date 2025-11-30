@@ -19,6 +19,30 @@ export class PrismaBookingRepository implements IBookingRepository {
     });
   }
 
+  async findByIdempotencyKey(
+    idempotencyKey: string
+  ): Promise<BookingWithRelations | null> {
+    const booking = await prisma.booking.findFirst({
+      where: {
+        idempotencyKey,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        classInstance: {
+          include: classInstanceIncludeDefinition,
+        },
+      },
+    });
+
+    return booking as BookingWithRelations | null;
+  }
+
   async createWithTransaction(
     params: CreateBookingParams
   ): Promise<BookingWithRelations> {

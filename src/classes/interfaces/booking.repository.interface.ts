@@ -14,6 +14,9 @@ export interface IBookingRepository {
     userId: string,
     classInstanceId: string
   ): Promise<Booking | null>;
+  findByIdempotencyKey(
+    idempotencyKey: string
+  ): Promise<BookingWithRelations | null>;
   createWithTransaction(
     params: CreateBookingParams
   ): Promise<BookingWithRelations>;

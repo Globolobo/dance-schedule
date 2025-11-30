@@ -34,6 +34,7 @@ describe("ApplicationService", () => {
     };
     mockBookingRepository = {
       findByUserAndClass: jest.fn(),
+      findByIdempotencyKey: jest.fn(),
       createWithTransaction: jest.fn(),
     };
 
@@ -215,6 +216,7 @@ describe("ApplicationService", () => {
     it("should create booking when all validations pass", async () => {
       mockClassInstanceRepository.findById.mockResolvedValue(mockClassInstance);
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
+      mockBookingRepository.findByIdempotencyKey.mockResolvedValue(null);
       mockBookingRepository.findByUserAndClass.mockResolvedValue(null);
       mockBookingRepository.createWithTransaction.mockResolvedValue(
         mockBooking
@@ -231,6 +233,9 @@ describe("ApplicationService", () => {
         classInstanceId
       );
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+      expect(mockBookingRepository.findByIdempotencyKey).toHaveBeenCalledWith(
+        idempotencyKey
+      );
       expect(mockBookingRepository.findByUserAndClass).toHaveBeenCalledWith(
         userId,
         classInstanceId
@@ -246,6 +251,7 @@ describe("ApplicationService", () => {
     it("should fetch class instance and user in parallel", async () => {
       mockClassInstanceRepository.findById.mockResolvedValue(mockClassInstance);
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
+      mockBookingRepository.findByIdempotencyKey.mockResolvedValue(null);
       mockBookingRepository.findByUserAndClass.mockResolvedValue(null);
       mockBookingRepository.createWithTransaction.mockResolvedValue(
         mockBooking
@@ -351,7 +357,32 @@ describe("ApplicationService", () => {
       ).rejects.toThrow(ClassFullError);
     });
 
-    it("should throw DuplicateBookingError when user already booked", async () => {
+    it("should return existing booking when idempotency key is reused", async () => {
+      mockClassInstanceRepository.findById.mockResolvedValue(mockClassInstance);
+      mockUserRepository.findByEmail.mockResolvedValue(mockUser);
+      mockBookingRepository.findByIdempotencyKey.mockResolvedValue(mockBooking);
+
+      const result = await applicationService.bookClass({
+        email,
+        classInstanceId,
+        idempotencyKey,
+      });
+
+      expect(result).toEqual(mockBooking);
+      expect(mockClassInstanceRepository.findById).toHaveBeenCalledWith(
+        classInstanceId
+      );
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+      expect(mockBookingRepository.findByIdempotencyKey).toHaveBeenCalledWith(
+        idempotencyKey
+      );
+      expect(mockBookingRepository.findByUserAndClass).not.toHaveBeenCalled();
+      expect(
+        mockBookingRepository.createWithTransaction
+      ).not.toHaveBeenCalled();
+    });
+
+    it("should throw DuplicateBookingError when user already booked with different idempotency key", async () => {
       const existingBookingId = crypto.randomUUID();
       const existingBooking = {
         id: existingBookingId,
@@ -365,6 +396,7 @@ describe("ApplicationService", () => {
 
       mockClassInstanceRepository.findById.mockResolvedValue(mockClassInstance);
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
+      mockBookingRepository.findByIdempotencyKey.mockResolvedValue(null);
       mockBookingRepository.findByUserAndClass.mockResolvedValue(
         existingBooking as any
       );
@@ -381,6 +413,9 @@ describe("ApplicationService", () => {
         classInstanceId
       );
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+      expect(mockBookingRepository.findByIdempotencyKey).toHaveBeenCalledWith(
+        idempotencyKey
+      );
       expect(mockBookingRepository.findByUserAndClass).toHaveBeenCalledWith(
         userId,
         classInstanceId

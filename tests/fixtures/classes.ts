@@ -18,9 +18,7 @@ export async function createTestUser(
   updatedAt: Date;
 }> {
   const {
-    email = `user-${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(7)}@test.com`,
+    email = `user-${crypto.randomUUID()}@test.com`,
     name = "Test User",
     role = UserRole.STUDENT,
   } = params;
@@ -54,7 +52,7 @@ export async function createTestInstructor(
   params: CreateTestInstructorParams = {}
 ): Promise<{ id: string; email: string; name: string }> {
   const {
-    email = `instructor-${Date.now()}@test.com`,
+    email = `instructor-${crypto.randomUUID()}@test.com`,
     name = "Test Instructor",
   } = params;
 
